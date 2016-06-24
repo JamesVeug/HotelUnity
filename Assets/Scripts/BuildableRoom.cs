@@ -78,11 +78,13 @@ public abstract class BuildableRoom : DRectangle, Buildable
         //Debug.Log("Tile " + data.dTileMap.getTile((int)movePosition.x, (int)movePosition.z) + " " + movePosition);
         if (Stage == STAGE_BLUEPRINT && Property == PROPERTY_BP_CREATE)
         {
-            selectionCube.transform.position = movePosition;
+            Vector3 cubeSize = new Vector3(Mathf.Floor(selectionCube.transform.localScale.x / 2), 0, Mathf.Floor(selectionCube.transform.localScale.z / 2));
+            selectionCube.transform.position = movePosition - cubeSize;
         }
         else if (Stage == STAGE_ITEMS)
         {
-            selectionCube.transform.position = movePosition;
+            Vector3 cubeSize = new Vector3(Mathf.Floor(selectionCube.transform.localScale.x/2), 0, Mathf.Floor(selectionCube.transform.localScale.z/2));
+            selectionCube.transform.position = movePosition - cubeSize;
         }
     }
 

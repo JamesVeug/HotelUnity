@@ -164,6 +164,7 @@ public class TileMap : MonoBehaviour
                                 bpWall.transform.position = position + newPos;
                                 bpWall.transform.parent = selectionCube;
                                 bpWall.name = "BPWall" + newPos.x + "," + newPos.z;
+                                rotateByBounds(bpWall, selectionScript.rect);
                             }
                         }
                         for (int y = 0; y < selectionScript.rect.height; y++)
@@ -175,6 +176,25 @@ public class TileMap : MonoBehaviour
                                 bpWall.transform.position = position + newPos;
                                 bpWall.transform.parent = selectionCube;
                                 bpWall.name = "BPWall" + newPos.x + "," + newPos.z;
+                                rotateByBounds(bpWall, selectionScript.rect);
+                            }
+                        }
+
+                        // Corners // HACK HACK HACK HACK
+                        // Top Left
+                        for (int y = 0; y <= 1; y++)
+                        {
+                            for (int x = 0; x <= 1; x++)
+                            {
+                                Vector3 newPos = new Vector3(x * (selectionScript.rect.width - 1), 0, y * (selectionScript.rect.height - 1));
+                                GameObject bpWall = (GameObject)Instantiate(blueprintWallPrefab);
+                                bpWall.transform.position = position + newPos;
+                                bpWall.transform.parent = selectionCube;
+                                bpWall.name = "BPWallCorner" + newPos.x + "," + newPos.z;
+                                if ( y == 1)
+                                {
+                                    bpWall.transform.GetChild(0).rotation = Quaternion.Euler(new Vector3(0, 180, 0));
+                                }
                             }
                         }
                     }
@@ -205,10 +225,7 @@ public class TileMap : MonoBehaviour
                             bpDoor.transform.position = newPos;
                             bpDoor.transform.parent = selectionCube;
                             bpDoor.name = "BPDoor" + newPos.x + "," + newPos.z;
-                            if (roomPos.x == 0 || roomPos.x == selectionScript.rect.width - 1)
-                            {
-                                bpDoor.transform.GetChild(0).localRotation = Quaternion.Euler(0, 90, 0);
-                            }
+                            rotateByBounds(bpDoor, selectionScript.rect);
                         }
                     }
 
@@ -232,14 +249,11 @@ public class TileMap : MonoBehaviour
 
 
                             // Add the Window
-                            GameObject bpDoor = (GameObject)Instantiate(blueprintWindowPrefab);
-                            bpDoor.transform.position = newPos;
-                            bpDoor.transform.parent = selectionCube;
-                            bpDoor.name = "BPWindow" + newPos.x + "," + newPos.z;
-                            if (roomPos.x == 0 || roomPos.x == selectionScript.rect.width - 1)
-                            {
-                                bpDoor.transform.GetChild(0).localRotation = Quaternion.Euler(0, 90, 0);
-                            }
+                            GameObject bpWindow = (GameObject)Instantiate(blueprintWindowPrefab);
+                            bpWindow.transform.position = newPos;
+                            bpWindow.transform.parent = selectionCube;
+                            bpWindow.name = "BPWindow" + newPos.x + "," + newPos.z;
+                            rotateByBounds(bpWindow, selectionScript.rect);
                         }
                     }
                 }
@@ -428,25 +442,7 @@ public class TileMap : MonoBehaviour
         }
         
         wallObject.transform.position = wallPosition;
-        wall.gameObject = wallObject;
-
-        // Rotate it
-        if (position.x == 0)
-        {
-            wallObject.transform.GetChild(0).localRotation *= Quaternion.Euler(0, 90, 0);
-        }
-        else if (position.x == room.width - 1)
-        {
-            wallObject.transform.GetChild(0).localRotation *= Quaternion.Euler(0, 270, 0);
-        }
-        else if (position.z == 0)
-        {
-            wallObject.transform.GetChild(0).localRotation *= Quaternion.Euler(0, 0, 0);
-        }
-        else if (position.z == room.height - 1)
-        {
-            wallObject.transform.GetChild(0).localRotation *= Quaternion.Euler(0, 180, 0);
-        }
+        rotateByBounds(wallObject, room);
     }
 
     private void buildWindow(DWindow window)
@@ -463,23 +459,7 @@ public class TileMap : MonoBehaviour
 
         // Rotate it
         BuildableRoom room = map.getRoom((int)window.position.x, (int)window.position.y);
-        Vector3 position = windowObject.transform.position - room.position;
-        if (position.x == 0)
-        {
-            windowObject.transform.GetChild(0).localRotation = Quaternion.Euler(0, 90, 0);
-        }
-        else if (position.x == room.width - 1)
-        {
-            windowObject.transform.GetChild(0).localRotation = Quaternion.Euler(0, 270, 0);
-        }
-        else if (position.z == 0)
-        {
-            windowObject.transform.GetChild(0).localRotation = Quaternion.Euler(0, 0, 0);
-        }
-        else if (position.z == room.height - 1)
-        {
-            windowObject.transform.GetChild(0).localRotation = Quaternion.Euler(0, 180, 0);
-        }
+        rotateByBounds(windowObject, room);
     }
 
     private void buildDoor(DDoor door)
@@ -496,23 +476,7 @@ public class TileMap : MonoBehaviour
 
         // Rotate it
         BuildableRoom room = map.getRoom((int)door.position.x, (int)door.position.y);
-        Vector3 position = doorObject.transform.position - room.position;
-        if (position.x == 0)
-        {
-            doorObject.transform.GetChild(0).localRotation = Quaternion.Euler(0, 90, 0);
-        }
-        else if (position.x == room.width - 1)
-        {
-            doorObject.transform.GetChild(0).localRotation = Quaternion.Euler(0, 270, 0);
-        }
-        else if (position.z == 0)
-        {
-            doorObject.transform.GetChild(0).localRotation = Quaternion.Euler(0, 0, 0);
-        }
-        else if (position.z == room.height - 1)
-        {
-            doorObject.transform.GetChild(0).localRotation = Quaternion.Euler(0, 180, 0);
-        }
+        rotateByBounds(doorObject, room);
 
 
     }
@@ -542,5 +506,26 @@ public class TileMap : MonoBehaviour
         }
         itemObject.transform.position = new Vector3((int)item.position.x, 0, (int)item.position.z);
         itemObject.transform.GetChild(0).transform.rotation = item.rotation;
+    }
+
+    private void rotateByBounds(GameObject o, DRectangle room)
+    {
+        Vector3 position = o.transform.position - room.position;
+        if (position.x == 0)
+        {
+            o.transform.GetChild(0).localRotation *= Quaternion.Euler(0, 90, 0);
+        }
+        else if (position.x == room.width - 1)
+        {
+            o.transform.GetChild(0).localRotation *= Quaternion.Euler(0, 270, 0);
+        }
+        else if (position.z == 0)
+        {
+            o.transform.GetChild(0).localRotation *= Quaternion.Euler(0, 0, 0);
+        }
+        else if (position.z == room.height - 1)
+        {
+            o.transform.GetChild(0).localRotation *= Quaternion.Euler(0, 180, 0);
+        }
     }
 }
