@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 
 [RequireComponent(typeof(TileMap))]
 public class TileMapMouse : MonoBehaviour {
@@ -11,12 +12,19 @@ public class TileMapMouse : MonoBehaviour {
     private Vector3 pressedPoint = Vector3.zero;
     private Vector3 lastPoint = Vector3.zero;
 
+    private int currentRoomIndex = 0;
+    private List<BuildableRoom> buildableRooms = new List<BuildableRoom>
+    {
+        new BReceptionRoom(0, 0, 0, 0),
+        new BGeneralRoom(0, 0, 0, 0),
+        new BDoubleBedroom(0, 0, 0, 0)
+    };
 
     private SelectionTile selectionScript;
     void Start()
     {
         tileMap = GetComponent<TileMap>();
-        whatToBuild = new BuildableRoom(0, 0, 0, 0);
+        whatToBuild = buildableRooms[currentRoomIndex];
         selectionScript = FindObjectOfType<SelectionTile>();
         selectionScript.setBuilder(whatToBuild);
     }
@@ -29,7 +37,7 @@ public class TileMapMouse : MonoBehaviour {
 
 
         Collider coll = GetComponent<Collider>();
-        Renderer rend = GetComponent<Renderer>();
+        //Renderer rend = GetComponent<Renderer>();
         if (coll.Raycast(ray, out hit, Mathf.Infinity)){
 
             // Save the mosues current position
@@ -80,7 +88,7 @@ public class TileMapMouse : MonoBehaviour {
             Debug.Log("Submit");
             if( !whatToBuild.hasNextStage())
             {
-                whatToBuild = new BuildableRoom(0, 0, 0, 0);
+                whatToBuild = new BDoubleBedroom(0, 0, 0, 0);
                 selectionScript.setBuilder(whatToBuild);
             }
             whatToBuild.applyStage();
@@ -88,13 +96,39 @@ public class TileMapMouse : MonoBehaviour {
         else if (Input.GetButtonDown("Cancel"))
         {
             Debug.Log("Cancel");
-            whatToBuild = new BuildableRoom(0, 0, 0, 0);
+            whatToBuild = new BDoubleBedroom(0, 0, 0, 0);
             selectionScript.setBuilder(whatToBuild);
         }
         else if (Input.GetButtonDown("Jump"))
         {
             Debug.Log("Jump");
-            whatToBuild.switchValue();
+            // If we havn't started buildign a room yet. Change type of room
+            if ( whatToBuild is BuildableRoom)
+            {
+                BuildableRoom bRoom = (BuildableRoom)whatToBuild;
+                if (bRoom.getStage() == BuildableRoom.STAGE_BLUEPRINT && bRoom.getProperty() == BuildableRoom.PROPERTY_BP_CREATE)
+                {
+
+                    currentRoomIndex++;
+                    if(currentRoomIndex >= buildableRooms.Count)
+                    {
+                        currentRoomIndex = 0;
+                    }
+                    whatToBuild = buildableRooms[currentRoomIndex];
+                    selectionScript.setBuilder(whatToBuild);
+                    Debug.Log(whatToBuild.GetType().Name);
+                }
+                else
+                {
+                    Debug.Log("C");
+                    // Can't change room type. Change items instead if we can
+                    whatToBuild.switchValue();
+                }
+            }
+            else
+            {
+                Debug.Log("Not Room");
+            }
         }
     }
 }

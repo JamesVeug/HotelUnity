@@ -6,6 +6,7 @@ using System;
 public class BuildableItem : DRectangle, Buildable, ICloneable, IEquatable<BuildableItem>
 {
     public Quaternion rotation = Quaternion.identity;
+    protected Vector2 origin;
     protected List<Vector2> tiles = new List<Vector2>();
     public BuildableItem(int x, int y)
     {
@@ -24,6 +25,11 @@ public class BuildableItem : DRectangle, Buildable, ICloneable, IEquatable<Build
             t.Add(new Vector2(tile.x + left, tile.y + top));
         }
         return t;
+    }
+
+    public Vector2 getOrigin()
+    {
+        return new Vector2(left + origin.x, top + origin.y);
     }
 
     public void moveMouse(Vector3 movePosition)
@@ -51,7 +57,6 @@ public class BuildableItem : DRectangle, Buildable, ICloneable, IEquatable<Build
         throw new NotImplementedException();
     }
     
-
     public bool hasNextStage()
     {
         throw new NotImplementedException();
@@ -82,5 +87,10 @@ public class BuildableItem : DRectangle, Buildable, ICloneable, IEquatable<Build
     public bool Equals(BuildableItem other)
     {
         return position.Equals(other.position) && rotation.Equals(other.rotation);
+    }
+
+    public bool canBeBuilt()
+    {
+        throw new NotImplementedException();
     }
 }

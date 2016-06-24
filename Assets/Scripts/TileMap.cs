@@ -21,12 +21,16 @@ public class TileMap : MonoBehaviour
     public float resolution = 8f;
     public Material[] materials;
     public GameObject wallPrefab;
+    public GameObject wallCornerPrefab;
     public GameObject doorPrefab;
     public GameObject windowPrefab;
     public GameObject[] itemObjects;
     public BuildableItem[] itemScripts = {
         new BuildableMinibar(0,0),
-        new BuildableBed(0,0)
+        new BuildableBed(0,0),
+        new BuildableReception(0,0),
+        new BuildableChair(0,0),
+        new BuildablePainting(0,0)
     };
 
 
@@ -100,6 +104,11 @@ public class TileMap : MonoBehaviour
                 else if (map.isItem(x, y))
                 {
                     BuildableItem item = map.getItem(x, y);
+                    if( item == null)
+                    {
+                        Debug.Log("Item is null at " + c);
+                    }
+                    Debug.Log("Item Edited" + c);
                     buildItem(item);
                 }
                 //texture.filterMode = FilterMode.Bilinear;
@@ -118,7 +127,7 @@ public class TileMap : MonoBehaviour
                 // Selection cube has changed. We need to style it
                 if (stage == BuildableRoom.STAGE_BLUEPRINT )
                 {
-                    Transform selectionCube = selectionScript.transform.GetChild(0);
+                    //Transform selectionCube = selectionScript.transform.GetChild(0);
                     if (property == BuildableRoom.PROPERTY_BP_CREATE)
                     {
                         //selectionCube.localScale = new Vector3(1, 0.2f, 1);
@@ -318,8 +327,8 @@ public class TileMap : MonoBehaviour
         int numTriangles = numTiles * 2;
 
         // Vertex Calculation
-        int vertexSize_x = width*2 + 1;
-        int vertexSize_y = height*2 + 1;
+        //int vertexSize_x = width*2 + 1;
+        //int vertexSize_y = height*2 + 1;
         int numVerticies = numTriangles*6;
 
         // Generate mesh data
@@ -400,10 +409,44 @@ public class TileMap : MonoBehaviour
 
     private void buildWall(DWall wall)
     {
-        GameObject wallObject = (GameObject)Instantiate(wallPrefab);
-        wallObject.transform.position = new Vector3(wall.position.x, 0, wall.position.y);
-        //wallObject.transform.parent = roomObject.transform;
+        Vector3 wallPosition = new Vector3(wall.position.x, 0, wall.position.y);
+        BuildableRoom room = map.getRoom((int)wall.position.x, (int)wall.position.y);
+        Vector3 position = wallPosition - room.position;
+
+        GameObject wallObject = null;
+        if((position.x == 0 || position.x == (room.width-1) ) && (position.z == 0 || position.z == (room.height-1)))
+        {
+            wallObject = (GameObject)Instantiate(wallCornerPrefab);
+            if( (position.x == 0 && position.z == 0) || (position.x == (room.width - 1) && position.z == (room.height-1)) )
+            {
+                wallObject.transform.GetChild(0).localRotation *= Quaternion.Euler(0, -90, 0);
+            }
+        }
+        else
+        {
+            wallObject = (GameObject)Instantiate(wallPrefab);
+        }
+        
+        wallObject.transform.position = wallPosition;
         wall.gameObject = wallObject;
+
+        // Rotate it
+        if (position.x == 0)
+        {
+            wallObject.transform.GetChild(0).localRotation *= Quaternion.Euler(0, 90, 0);
+        }
+        else if (position.x == room.width - 1)
+        {
+            wallObject.transform.GetChild(0).localRotation *= Quaternion.Euler(0, 270, 0);
+        }
+        else if (position.z == 0)
+        {
+            wallObject.transform.GetChild(0).localRotation *= Quaternion.Euler(0, 0, 0);
+        }
+        else if (position.z == room.height - 1)
+        {
+            wallObject.transform.GetChild(0).localRotation *= Quaternion.Euler(0, 180, 0);
+        }
     }
 
     private void buildWindow(DWindow window)
@@ -420,10 +463,22 @@ public class TileMap : MonoBehaviour
 
         // Rotate it
         BuildableRoom room = map.getRoom((int)window.position.x, (int)window.position.y);
-        Vector3 doorPosition = windowObject.transform.position - room.position;
-        if (doorPosition.x == 0 || doorPosition.x == room.width - 1)
+        Vector3 position = windowObject.transform.position - room.position;
+        if (position.x == 0)
         {
             windowObject.transform.GetChild(0).localRotation = Quaternion.Euler(0, 90, 0);
+        }
+        else if (position.x == room.width - 1)
+        {
+            windowObject.transform.GetChild(0).localRotation = Quaternion.Euler(0, 270, 0);
+        }
+        else if (position.z == 0)
+        {
+            windowObject.transform.GetChild(0).localRotation = Quaternion.Euler(0, 0, 0);
+        }
+        else if (position.z == room.height - 1)
+        {
+            windowObject.transform.GetChild(0).localRotation = Quaternion.Euler(0, 180, 0);
         }
     }
 
@@ -441,22 +496,29 @@ public class TileMap : MonoBehaviour
 
         // Rotate it
         BuildableRoom room = map.getRoom((int)door.position.x, (int)door.position.y);
-        Vector3 doorPosition = doorObject.transform.position - room.position;
-        Debug.Log("Door position " + doorPosition);
-        if( doorPosition.x == 0 || doorPosition.x == room.width-1)
+        Vector3 position = doorObject.transform.position - room.position;
+        if (position.x == 0)
         {
             doorObject.transform.GetChild(0).localRotation = Quaternion.Euler(0, 90, 0);
         }
+        else if (position.x == room.width - 1)
+        {
+            doorObject.transform.GetChild(0).localRotation = Quaternion.Euler(0, 270, 0);
+        }
+        else if (position.z == 0)
+        {
+            doorObject.transform.GetChild(0).localRotation = Quaternion.Euler(0, 0, 0);
+        }
+        else if (position.z == room.height - 1)
+        {
+            doorObject.transform.GetChild(0).localRotation = Quaternion.Euler(0, 180, 0);
+        }
 
-        
+
     }
 
     private void buildItem(BuildableItem item)
     {
-        if (item == null)
-        {
-            Debug.LogError("Item is null!");
-        }
 
         string name = item.GetType().Name + item.position.x + "," + item.position.z;
         GameObject itemObject = GameObject.Find(name);

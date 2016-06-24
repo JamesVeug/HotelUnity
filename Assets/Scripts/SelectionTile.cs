@@ -38,6 +38,12 @@ public class SelectionTile : MonoBehaviour {
 	// Update is called once per frame
 	void LateUpdate ()
     {
+        Vector3 asignedPosition = new Vector3(
+            Mathf.Clamp(transform.position.x, 0, data.dTileMap.width - transform.localScale.x),
+            transform.position.y,
+            Mathf.Clamp(transform.position.z, 0, data.dTileMap.height - transform.localScale.z)
+        );
+        transform.position = asignedPosition;
 
         rect.left = (int)transform.position.x;
         rect.top = (int)transform.position.z;
@@ -60,10 +66,8 @@ public class SelectionTile : MonoBehaviour {
 
             Vector3 scale = new Vector3(rect.width, 1, rect.height);
             transform.localScale = scale;
-
-
-
-            if (rect.collidesWith(room) && data.dTileMap.isRoom(rect))
+            
+            if (rect.collidesWith(room) && data.dTileMap.isRoom(rect) || data.dTileMap.isWall(rect))
             {
                 // We are inside the room
                 // Check we aren't clicking on an item already
@@ -76,7 +80,9 @@ public class SelectionTile : MonoBehaviour {
                 valid = false;
             }
         }
-        else {
+        else
+        {
+            //DRectangle floorRect = rect.collapse(1, 1);
             if (rect.width < 5 || rect.height < 5 || data.dTileMap.collides(rect))
             {
                 rend.material = selectionFailMaterial;

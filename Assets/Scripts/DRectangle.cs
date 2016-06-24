@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System;
 
 public class DRectangle {
 
@@ -58,5 +59,25 @@ public class DRectangle {
         if (this.right < left + 1) return false;
         if (this.bottom < top + 1) return false;
         return true;
+    }
+
+    
+    // Returns a new DRectangle object with the dimensions reduced by (x,y)*2
+    public DRectangle collapse(int shrinkWidthBy, int shrinkHeightBy)
+    {
+        DRectangle rect = new DRectangle();
+        rect.left = left + shrinkWidthBy;
+        rect.top = top + shrinkHeightBy;
+        rect.width = width - (shrinkWidthBy * 2);
+        rect.height = height - (shrinkHeightBy * 2);
+        //Debug.Log("Old " + this.ToString());
+        //Debug.Log("New " + rect.ToString());
+
+        return rect;
+    }
+
+    public override string ToString()
+    {
+        return "DRectangle(" + left + "," + top + "," + width + "," + height + ")";
     }
 }

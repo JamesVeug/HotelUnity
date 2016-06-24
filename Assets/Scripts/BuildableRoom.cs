@@ -3,7 +3,7 @@ using System.Collections;
 using System;
 using System.Collections.Generic;
 
-public class BuildableRoom : DRectangle, Buildable
+public abstract class BuildableRoom : DRectangle, Buildable
 {
     public const int STAGE_BLUEPRINT = 0;
     public const int STAGE_WINDOWSDOORS = 1;
@@ -20,22 +20,14 @@ public class BuildableRoom : DRectangle, Buildable
     public const string PROPERTY_ITEMS_PLACE = "PlaceItem";
     public const string PROPERTY_ITEMS_EDIT = "EditItem";
 
-    public List<BuildableItem> placeableItems = new List<BuildableItem>
-    {
-        new BuildableMinibar(0,0),
-        new BuildableBed(0,0)
-    };
-
     public int maxDoors = 2;
     private int currentItemIndex;
     private BuildableItem editingItem;
+    private bool initialized = false;
 
-    public GameObject selectionCube;
-    private Vector3 lastPoint = Vector3.zero;
+    //private Vector3 lastPoint = Vector3.zero;
     private Vector3 originalPosition = Vector3.zero;
-    private BuildableRoom builtRoom;
 
-    GameData data;
     public List<DDoor> doors = new List<DDoor>();
     public List<DWindow> windows = new List<DWindow>();
     public List<BuildableItem> items = new List<BuildableItem>();
@@ -44,23 +36,31 @@ public class BuildableRoom : DRectangle, Buildable
     // Blueprint
     // Windows/Doors
     // Items
-    private int Stage = 0; // Blueprint - Windows/doors - Items
+    protected int Stage = 0; // Blueprint - Windows/doors - Items
 
     // Blueprint
     // - Create Floor
     // - Resize
     // Windows/Doors
-    private string Property = PROPERTY_BP_CREATE; // Options of current Stage
-    
+    protected string Property = PROPERTY_BP_CREATE; // Options of current Stage
 
-    private SelectionTile selectionScript;
-    public BuildableRoom() : this(0, 0, 0, 0)
+
+    protected GameData data;
+    protected SelectionTile selectionScript;
+    protected GameObject selectionCube;
+    protected BuildableRoom() : this(0, 0, 0, 0)
     {
 
     }
 
-    public BuildableRoom(int x, int y, int width, int height) : base(x,y,width,height)
+    protected BuildableRoom(int x, int y, int width, int height) : base(x, y, width, height)
     {
+        
+    }
+
+    private void initialize()
+    {
+
         selectionScript = GameObject.FindObjectOfType<SelectionTile>();
         selectionCube = selectionScript.gameObject;
 
@@ -68,16 +68,19 @@ public class BuildableRoom : DRectangle, Buildable
         Property = PROPERTY_BP_CREATE;
 
         data = GameObject.FindObjectOfType<GameData>();
+        initialized = true;
     }
 
     public void moveMouse(Vector3 movePosition)
     {
+        if (!initialized) { initialize(); }
+
         //Debug.Log("Tile " + data.dTileMap.getTile((int)movePosition.x, (int)movePosition.z) + " " + movePosition);
         if (Stage == STAGE_BLUEPRINT && Property == PROPERTY_BP_CREATE)
         {
             selectionCube.transform.position = movePosition;
         }
-        else if(Stage == STAGE_ITEMS)
+        else if (Stage == STAGE_ITEMS)
         {
             selectionCube.transform.position = movePosition;
         }
@@ -85,12 +88,14 @@ public class BuildableRoom : DRectangle, Buildable
 
     public BuildableItem getCurrentBuildingItem()
     {
-        return placeableItems[currentItemIndex];
+        return getPlaceableItems().Count == 0 ? null : getPlaceableItems()[currentItemIndex];
     }
 
     public void pressMouse(Vector3 pressPosition)
     {
-        if( Stage == STAGE_BLUEPRINT && Property == PROPERTY_BP_RESIZE)
+        if (!initialized) { initialize(); }
+
+        if (Stage == STAGE_BLUEPRINT && Property == PROPERTY_BP_RESIZE)
         {
             this.left = (int)selectionCube.transform.position.x;
             this.top = (int)selectionCube.transform.position.z;
@@ -117,6 +122,8 @@ public class BuildableRoom : DRectangle, Buildable
 
     public void releaseMouse(Vector3 pressedPosition, Vector3 releasePosition)
     {
+        if (!initialized) { initialize(); }
+
         if (Stage == STAGE_BLUEPRINT && Property == PROPERTY_BP_CREATE)
         {
             // Finished creating the Floor blueprint. Let us resize it now
@@ -131,14 +138,13 @@ public class BuildableRoom : DRectangle, Buildable
         {
             // Add door
             Vector3 worldPosition = releasePosition - selectionCube.transform.position;
-            if( (worldPosition.x == 0 || worldPosition.x == width-1 || worldPosition.z == 0 || worldPosition.z == height-1) && !doors.Contains(new DDoor(new Vector2(worldPosition.x,worldPosition.z))))
+            if ((worldPosition.x == 0 || worldPosition.x == width - 1 || worldPosition.z == 0 || worldPosition.z == height - 1) && !doors.Contains(new DDoor(new Vector2(worldPosition.x, worldPosition.z))))
             {
-                Vector2 position = new Vector2(left+worldPosition.x, top+worldPosition.z);
-                Debug.Log("Added Door " + position);
+                Vector2 position = new Vector2(left + worldPosition.x, top + worldPosition.z);
 
                 doors.Add(new DDoor(position));
                 data.dTileMap.changes.Add(new Vector2(position.x, position.y));
-                if(doors.Count >= maxDoors)
+                if (doors.Count >= maxDoors)
                 {
                     Property = PROPERTY_WD_WINDOW;
                 }
@@ -150,10 +156,10 @@ public class BuildableRoom : DRectangle, Buildable
             Vector3 worldPosition = releasePosition - selectionCube.transform.position;
             if ((worldPosition.x == 0 || worldPosition.x == width - 1 || worldPosition.z == 0 || worldPosition.z == height - 1) && !windows.Contains(new DWindow(new Vector2(worldPosition.x, worldPosition.z))))
             {
-                windows.Add(new DWindow(new Vector2(left+worldPosition.x, top+worldPosition.z)));
+                windows.Add(new DWindow(new Vector2(left + worldPosition.x, top + worldPosition.z)));
             }
         }
-        else if (Stage == STAGE_ITEMS && Property == PROPERTY_ITEMS_PLACE )
+        else if (Stage == STAGE_ITEMS && Property == PROPERTY_ITEMS_PLACE)
         {
 
             // Left click place. 
@@ -164,20 +170,18 @@ public class BuildableRoom : DRectangle, Buildable
             if (selectionScript.isValid())
             {
                 // Add Item
-                BuildableItem clone = (BuildableItem)placeableItems[currentItemIndex].Clone();
+                BuildableItem clone = (BuildableItem)getPlaceableItems()[currentItemIndex].Clone();
                 clone.left = (int)selectionCube.transform.position.x;
                 clone.top = (int)selectionCube.transform.position.z;
                 items.Add(clone);
                 data.dTileMap.AddItem(clone);
-
-                //data.dTileMap.AddItem(clone);
             }
             else if (pressedPosition.Equals(releasePosition))
             {
                 // Can't build here. So check if it's an item
-                foreach(BuildableItem item in items)
+                foreach (BuildableItem item in items)
                 {
-                    if( item.position.x == releasePosition.x && item.position.z == releasePosition.z)
+                    if (item.contains(releasePosition))
                     {
                         //Debug.Log("Clicked on item");
                         Property = PROPERTY_ITEMS_EDIT;
@@ -189,7 +193,7 @@ public class BuildableRoom : DRectangle, Buildable
         }
         else if (Stage == STAGE_ITEMS && Property == PROPERTY_ITEMS_EDIT)
         {
-            if (!editingItem.position.x.Equals(releasePosition.x) && !editingItem.position.z.Equals(releasePosition.z))
+            if (!editingItem.contains(releasePosition))
             {
                 Property = PROPERTY_ITEMS_PLACE;
             }
@@ -197,7 +201,9 @@ public class BuildableRoom : DRectangle, Buildable
             {
                 int index = items.IndexOf(editingItem);
                 items[index].rotation = editingItem.rotation * Quaternion.Euler(0, 90, 0);
-                data.dTileMap.changes.Add(new Vector2(items[index].position.x, items[index].position.z));
+                // Add more changes
+                data.dTileMap.changes.Add(new Vector2(items[index].getOrigin().x, items[index].getOrigin().y));
+                Debug.Log("Rotating BuildingRoom");
             }
         }
         //Debug.Log("Property: " + Property);
@@ -206,6 +212,8 @@ public class BuildableRoom : DRectangle, Buildable
 
     public void dragMouse(Vector3 pressedPosition, Vector3 dragPosition)
     {
+        if (!initialized) { initialize(); }
+
         Vector3 change = dragPosition - pressedPosition;
 
         int right = (int)Mathf.Max(dragPosition.x, pressedPosition.x) + 1;
@@ -239,28 +247,28 @@ public class BuildableRoom : DRectangle, Buildable
 
     public void applyStage()
     {
-        if( Stage == STAGE_BLUEPRINT && Property == PROPERTY_BP_RESIZE )
+        if (Stage == STAGE_BLUEPRINT && Property == PROPERTY_BP_RESIZE)
         {
             //selectionCube.transform.GetChild(0).localScale += new Vector3(0,2.4f,0);
             //selectionCube.transform.position += new Vector3(0, 1.2f, 0);
             Stage = STAGE_WINDOWSDOORS;
             Property = PROPERTY_WD_DOOR;
         }
-        else if (Stage == STAGE_WINDOWSDOORS )
+        else if (Stage == STAGE_WINDOWSDOORS)
         {
-            if ( doors.Count > 0 && selectionScript.isValid())
+            if (canBeBuilt())
             {
                 this.width = (int)selectionCube.transform.localScale.x;
                 this.height = (int)selectionCube.transform.localScale.z;
                 this.left = (int)selectionCube.transform.position.x;
                 this.top = (int)selectionCube.transform.position.z;
 
-                builtRoom = data.dTileMap.MakeRoom(this);
+                data.dTileMap.MakeRoom(this);
 
                 Property = PROPERTY_ITEMS_PLACE;
                 Stage = STAGE_ITEMS;
                 currentItemIndex = 0;
-                
+
 
                 selectionCube.transform.GetChild(0).localScale = new Vector3(1, 0.2f, 1);
                 selectionCube.transform.GetChild(0).localPosition = new Vector3(0.5f, 0.125f, 0.5f);
@@ -314,7 +322,7 @@ public class BuildableRoom : DRectangle, Buildable
     {
         foreach (BuildableItem item in items)
         {
-            if (item.contains(new Vector3(x,0,y)))
+            if (item.contains(new Vector3(x, 0, y)))
             {
                 return item;
             }
@@ -338,9 +346,12 @@ public class BuildableRoom : DRectangle, Buildable
     {
         Debug.Log("SWITCHING");
         currentItemIndex++;
-        if( currentItemIndex >= placeableItems.Count)
+        if (currentItemIndex >= getPlaceableItems().Count)
         {
             currentItemIndex = 0;
         }
     }
+
+    public abstract bool canBeBuilt();
+    public abstract List<BuildableItem> getPlaceableItems();
 }

@@ -146,11 +146,11 @@ public class DTileMap  {
         }*/
 
 
-        if (!collides(room))
-        {
+        //if (!collides(room))
+        //{
             rooms.Add(room);
             ApplyToTileMap(room);
-        }
+        //}
         return room;
     }
 
@@ -229,6 +229,21 @@ public class DTileMap  {
             for (int y = rect.top; y <= rect.bottom; y++)
             {
                 if( tiles[x,y] != ROOM)
+                {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    public bool isWall(DRectangle rect)
+    {
+        for (int x = rect.left; x <= rect.right; x++)
+        {
+            for (int y = rect.top; y <= rect.bottom; y++)
+            {
+                if (tiles[x, y] != WALL)
                 {
                     return false;
                 }

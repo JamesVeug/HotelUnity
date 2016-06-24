@@ -18,5 +18,6 @@ public class BuildableBed : BuildableItem{
         tiles.Add(new Vector2(1, 1));
         tiles.Add(new Vector2(0, 2));
         tiles.Add(new Vector2(1, 2));
+        origin = tiles[4]; // TileVector to set when we want to indicate this item has changed
     }
 }
