@@ -1,22 +1,15 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using UnityEngine;
 
-public class BDoubleBedroom : BuildableRoom{
+public class BDoubleBedroom : BBedroom{
 
-    public BDoubleBedroom() : this(0, 0, 0, 0)
+
+    public List<Type> placeableItems = new List<Type>
     {
-
-    }
-
-    public BDoubleBedroom(int x, int y, int width, int height) : base(x,y,width,height)
-    {
-
-    }
-
-    public List<BuildableItem> placeableItems = new List<BuildableItem>
-    {
-        new BuildableMinibar(0,0),
-        new BuildableBed(0,0)
+        typeof(BuildableMinibar),
+        typeof(ISingleBed),
+        typeof(IDoubleBed)
     };
 
     public override bool canBeBuilt()
@@ -24,8 +17,23 @@ public class BDoubleBedroom : BuildableRoom{
         return doors.Count > 0 && selectionScript.isValid();
     }
 
-    public override List<BuildableItem> getPlaceableItems()
+    public override List<Type> getPlaceableItems()
     {
         return placeableItems;
+    }
+
+    public override int checkin(AIBase ai)
+    {
+        for(int i = 0; i < beds.Count; i++)
+        {
+            bedOwners.Add(i, ai);
+        }
+
+        return UnityEngine.Random.Range(0, beds.Count);
+    }
+
+    public override void checkout(AIBase ai)
+    {
+        bedOwners.Clear();
     }
 }

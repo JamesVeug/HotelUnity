@@ -1,23 +1,24 @@
 ﻿using UnityEngine;
 using System;
 
-public class DDoor : DDataObject, IEquatable<DDoor>
+public class DDoor : DDataObject
 {
-    public Vector2 position;
-    public GameObject gameObject;
 
-    public DDoor(int x, int y)
+    public static DDoor create(float x, float y, Navigation.Direction dir)
     {
-        position = new Vector2(x, y);
+        DDoor door = ScriptableObject.CreateInstance<DDoor>();
+        door.position = new Vector2(x, y);
+        door.facingDirection = dir;
+
+        return door;
     }
 
-    public DDoor(Vector2 position)
+    public static DDoor create(Vector2 position, Navigation.Direction dir)
     {
-        this.position = new Vector2(position.x, position.y);
-    }
+        DDoor door = ScriptableObject.CreateInstance<DDoor>();
+        door.position = new Vector2(position.x, position.y);
+        door.facingDirection = dir;
 
-    public bool Equals(DDoor other)
-    {
-        return other !=  null && position.Equals(other.position);
+        return door;
     }
 }

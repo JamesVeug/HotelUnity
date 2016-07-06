@@ -1,0 +1,183 @@
+﻿using UnityEngine;
+using System.Collections;
+using System.Collections.Generic;
+
+public abstract class AIBase : MonoBehaviour
+{
+    public static int NEXT_ID = 0;
+    protected int id = 0;
+
+    public int STATE_IDLE = 0;
+    public int STATE_WALK = 1;
+    //public int STATE_SLEEP = 2;
+
+    public float tileMinDistance = 0.1f;
+    public float walkSpeed = 0.1f;
+
+    public int State = 0;
+
+    protected List<Vector3> path = new List<Vector3>();
+    protected int pathIndex = 0;
+
+    public Vector3 targetPosition { get; set; }
+
+    protected Navigation nav;
+    protected GameData data;
+
+    protected Stack<Order> orders = new Stack<Order>();
+
+    protected int bedIndex = 0;
+    protected int bedSideIndex = 0;
+    protected BBedroom ownedRoom = null;
+    protected BuildableRoom currentRoom = null;
+
+    // Properties
+    public float property_sleep = 0;
+
+
+    public void walkToPosition(Vector3 pos)
+    {
+        //Debug.Log("Door position " + pos);
+        targetPosition = pos;
+        State = STATE_WALK;
+        path = nav.getPath(transform.position, targetPosition, 0);
+        pathIndex = 0;
+    }
+
+    protected void sleep()
+    {
+        if (property_sleep >= 1)
+        {
+            // Wake up
+            State = STATE_IDLE;
+        }
+        else
+        {
+            // Make Z's
+            property_sleep += Time.deltaTime;
+            Debug.Log("Sleep");
+        }
+    }
+
+    public int getBedIndex()
+    {
+        return bedIndex;
+    }
+
+    public int getBedSideIndex()
+    {
+        return bedSideIndex;
+    }
+
+    public BuildableRoom getCurrentRoom()
+    {
+        return currentRoom;
+    }
+
+    public BBedroom getOwnedRoom()
+    {
+        return ownedRoom;
+    }
+
+    public void addOrder(Order order)
+    {
+        orders.Push(order);
+    }
+
+    public bool buyRoom()
+    {
+        BBedroom room = data.gameLogic.getAvailableRoom();
+
+        if (room == null)
+        {
+            // No rooms available
+            return false;
+        }
+
+        // Check us in
+        bedIndex = room.checkin(this);
+        ownedRoom = room;
+        bedSideIndex = 0;
+
+        // Checked in
+        return true;
+    }
+
+    public void checkOut()
+    {
+        // Check us out of the room
+        ownedRoom.checkout(this);
+
+        // Forget the room
+        ownedRoom = null;
+        bedIndex = 0;
+        bedSideIndex = 0;
+    }
+
+    public bool isAtTile(Vector2 position)
+    {
+        Vector3 worldTilePosition = new Vector3(position.x, 0, position.y);
+        Vector3 worldPosition = new Vector3(transform.position.x - data.graphicsMap.tileSize / 2, 0, transform.position.z - data.graphicsMap.tileSize / 2);
+        return (worldTilePosition - worldPosition).magnitude <= tileMinDistance;
+    }
+
+
+    public BuildableBed getOwnedBed()
+    {
+        BuildableRoom room = getOwnedRoom();
+        if (room == null)
+        {
+            return null;
+        }
+
+        return getOwnedRoom().getBed(getBedIndex());
+    }
+
+    public Order getCurrentOrder()
+    {
+        return orders.Count > 0 ? orders.Peek() : null;
+    }
+
+    protected void moveTowardsTarget()
+    {
+        if (path == null)
+        {
+            Debug.LogError("Path is null - target = " + targetPosition);
+        }
+        else if (path.Count == 0)
+        {
+            Debug.LogError("No points in path - target = " + targetPosition);
+        }
+        else if (pathIndex >= path.Count)
+        {
+            Debug.LogError("Attempting to walk past path " + pathIndex + " >= " + path.Capacity + " - target = " + targetPosition);
+        }
+
+        // Check next path
+        //Debug.Log("Index " + pathIndex + " " + path[pathIndex]);
+        //Debug.Log("Distance " + distance);
+
+        //Debug.Log(path[pathIndex] + " " +  transform.position);
+        float distance = (path[pathIndex] - transform.position).magnitude;
+        if (distance < tileMinDistance)
+        {
+            // Finished path
+            // Changed room as we are on a new tile
+            currentRoom = nav.getCurrentRoom(this);
+
+            pathIndex++;
+            if (pathIndex >= path.Count)
+            {
+                targetPosition = Vector3.zero;
+                State = STATE_IDLE;
+                return;
+            }
+        }
+
+        // Moving to next point
+        Vector3 newPosition = Vector3.MoveTowards(transform.position, path[pathIndex], Time.deltaTime * walkSpeed);
+        transform.LookAt(newPosition);
+
+        transform.position = newPosition;
+    }
+}

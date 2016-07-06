@@ -1,20 +1,21 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 public class BReceptionRoom : BuildableRoom{
 
-    public BReceptionRoom() : this(0, 0, 0, 0)
-    {
+    public List<BuildableReception> frontdesks = new List<BuildableReception>();
 
-    }
-
-    public BReceptionRoom(int x, int y, int width, int height) : base(x,y,width,height)
+    public List<Type> placeableItems = new List<Type>
     {
-    }
+        typeof(BuildableReception)
+    };
 
-    public List<BuildableItem> placeableItems = new List<BuildableItem>
+
+
+    public Dictionary<Type, int> requiredItems = new Dictionary<Type, int>
     {
-        new BuildableReception(0,0)
+        { typeof(BuildableReception),1 } // Requires 1 front desk
     };
 
     public override bool canBeBuilt()
@@ -22,8 +23,30 @@ public class BReceptionRoom : BuildableRoom{
         return doors.Count > 0 && selectionScript.isValid();
     }
 
-    public override List<BuildableItem> getPlaceableItems()
+    public override List<Type> getPlaceableItems()
     {
         return placeableItems;
+    }
+
+    public override Dictionary<Type, int> getRequiredItems()
+    {
+        return requiredItems;
+    }
+
+    public BuildableReception getFrontDesk(int index)
+    {
+        return frontdesks[index];
+    }
+
+    protected override void addItem(BuildableItem item)
+    {
+        Debug.Log("Added item " + item);
+        base.addItem(item);
+        Debug.Log("Added item2 " + item);
+        if (item is BuildableReception)
+        {
+            Debug.Log("Was Reception");
+            frontdesks.Add((BuildableReception)item);
+        }
     }
 }

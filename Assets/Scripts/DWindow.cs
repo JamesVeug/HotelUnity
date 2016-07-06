@@ -1,23 +1,23 @@
 ﻿using System;
 using UnityEngine;
 
-public class DWindow : DDataObject, IEquatable<DWindow>
+public class DWindow : DDataObject
 {
-    public Vector2 position;
-    public GameObject gameObject;
-
-    public DWindow(int x, int y)
+    public static DWindow create(float x, float y, Navigation.Direction dir)
     {
-        position = new Vector2(x, y);
+        DWindow window = ScriptableObject.CreateInstance<DWindow>();
+        window.position = new Vector2(x, y);
+        window.facingDirection = dir;
+
+        return window;
     }
 
-    public DWindow(Vector2 position)
+    public static DWindow create(Vector2 position, Navigation.Direction dir)
     {
-        this.position = new Vector2(position.x, position.y);
-    }
+        DWindow window = ScriptableObject.CreateInstance<DWindow>();
+        window.position = new Vector2(position.x, position.y);
+        window.facingDirection = dir;
 
-    public bool Equals(DWindow other)
-    {
-        return position.Equals(other.position);
+        return window;
     }
 }

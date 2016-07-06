@@ -1,7 +1,9 @@
 ﻿using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
+using System;
 
+[Serializable]
 public class SelectionTile : MonoBehaviour {
     public GameObject tileObject;
     public Vector3 defaultTileObjectSize = new Vector3(1, 0.5f, 1);
@@ -10,6 +12,7 @@ public class SelectionTile : MonoBehaviour {
     public Material selectionFailMaterial;
     public Material selectionWorkMaterial;
 
+    [SerializeField]
     private Buildable builder;
     private int builderStage = 0;
     private string builderProperty = "";
@@ -22,8 +25,8 @@ public class SelectionTile : MonoBehaviour {
     private List<DWindow> windowPositions = new List<DWindow>();
     private List<BuildableItem> placedItems = new List<BuildableItem>();
 
-    private GameData data;
     public DRectangle rect;
+    private GameData data;
     private Renderer rend;
     private bool valid;
 
@@ -32,7 +35,7 @@ public class SelectionTile : MonoBehaviour {
     {
         rend = tileObject.GetComponent<Renderer>();
         data = FindObjectOfType<GameData>();
-        rect = new DRectangle();
+        rect = ScriptableObject.CreateInstance<DRectangle>();
     }
 	
 	// Update is called once per frame
@@ -66,8 +69,10 @@ public class SelectionTile : MonoBehaviour {
 
             Vector3 scale = new Vector3(rect.width, 1, rect.height);
             transform.localScale = scale;
-            
-            if (rect.collidesWith(room) && data.dTileMap.isRoom(rect) || data.dTileMap.isWall(rect))
+
+            //DRectangle innerRoom = room.collapse(1, 1, 1 ,1);
+            // && data.navigation.canBeWalkedOn(rect)
+            if (room.contains(rect) && canHaveItemsBuiltOn(rect))
             {
                 // We are inside the room
                 // Check we aren't clicking on an item already
@@ -83,7 +88,7 @@ public class SelectionTile : MonoBehaviour {
         else
         {
             //DRectangle floorRect = rect.collapse(1, 1);
-            if (rect.width < 5 || rect.height < 5 || data.dTileMap.collides(rect))
+            if (rect.width < 5 || rect.height < 5 || data.dTileMap.collides(rect) || !canHaveRoomBuiltOn(rect))
             {
                 rend.material = selectionFailMaterial;
                 valid = false;
@@ -94,6 +99,37 @@ public class SelectionTile : MonoBehaviour {
             }
         }
         rend.material.mainTextureScale = new Vector2(rect.width, rect.height);
+    }
+
+    private bool canHaveItemsBuiltOn(DRectangle rect)
+    {
+        for (int x = rect.left; x <= rect.right; x++)
+        {
+            for (int y = rect.top; y <= rect.bottom; y++)
+            {
+                if (data.dTileMap.isRoom(x, y)) continue;
+                if (data.dTileMap.hasWall(x, y)) continue;
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private bool canHaveRoomBuiltOn(DRectangle rect)
+    {
+        for (int x = rect.left; x <= rect.right; x++)
+        {
+            for (int y = rect.top; y <= rect.bottom; y++)
+            {
+                if (!data.dTileMap.isGrass(x, y))
+                {
+                    return false;
+                }
+            }
+        }
+
+        return true;
     }
 
     public void setBuilder(Buildable b)
@@ -120,12 +156,25 @@ public class SelectionTile : MonoBehaviour {
         return builder;
     }
 
+    void OnEnable()
+    {
+        Debug.Log("Map -> " + FindObjectOfType<TileMapMouse>());
+    }
+
     public bool isModified()
     {
-        // Record what has changed
+        // Record what has changed 
+        //Debug.Log(builder);
         buildStageChanged = this.builderStage != builder.getStage();
         buildPropertyChanged = this.builderProperty != builder.getProperty();
-        bool roomChanged = checkRoomChanged();
+        bool roomChanged = false;
+        if (builder is BuildableRoom){
+            roomChanged = checkRoomChanged();
+        }
+        else if ( builder is BuildableTile)
+        {
+            roomChanged = checkTileChanged();
+        }
 
         if ( buildPropertyChanged || buildStageChanged || roomChanged)
         {
@@ -137,6 +186,21 @@ public class SelectionTile : MonoBehaviour {
 
         // No Change
         return false;
+    }
+
+    public bool checkTileChanged()
+    {
+        BuildableTile room = (BuildableTile)builder;
+        bool changed = false;
+
+        if( room.changedTile != Vector2.zero)
+        {
+            data.dTileMap.setTile((int)room.changedTile.x, (int)room.changedTile.y, room.changedValue);
+            room.changedTile = Vector2.zero;
+            changed = true;
+        }
+
+        return changed;
     }
 
     public bool checkRoomChanged()

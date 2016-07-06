@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
+using System;
 
 [RequireComponent(typeof(MeshFilter))]
 [RequireComponent(typeof(MeshRenderer))]
@@ -13,24 +14,31 @@ public class TileMap : MonoBehaviour
         public int width;
         public int height;
     }
-    
+
+    /*public Material temp;
+    public int previousTemp;
+    public float time;*/
 
     public int width = 50;
     public int height = 50;
     public float tileSize = 1.0f;
     public float resolution = 8f;
+    public Material itemMaterial;
     public Material[] materials;
     public GameObject wallPrefab;
     public GameObject wallCornerPrefab;
     public GameObject doorPrefab;
     public GameObject windowPrefab;
     public GameObject[] itemObjects;
-    public BuildableItem[] itemScripts = {
-        new BuildableMinibar(0,0),
-        new BuildableBed(0,0),
-        new BuildableReception(0,0),
-        new BuildableChair(0,0),
-        new BuildablePainting(0,0)
+    public Type[] itemScripts = {
+        typeof(BuildableMinibar),
+        typeof(BuildableReception),
+        typeof(BuildableChair),
+        typeof(BuildablePainting),
+        typeof(ISingleBed), // Clean
+        typeof(ISingleBed), // Dirty
+        typeof(IDoubleBed), // Clean
+        typeof(IDoubleBed), // Dirty
     };
 
 
@@ -38,11 +46,12 @@ public class TileMap : MonoBehaviour
     public GameObject blueprintDoorPrefab;
     public GameObject blueprintWindowPrefab;
 
+    private GameData gameData;
     private Material[] currentMaterials;
     private TileMapImage[] imageMaps;
     private int texWidth;
     private int texHeight;
-    // Create map copy
+    // Create map copy 
     // When we add buildings only change the pixels of the changed tiles
 
     // Built map
@@ -58,57 +67,72 @@ public class TileMap : MonoBehaviour
 
     void Update()
     {
-        if( map.changes == null)
+
+       /* MeshRenderer rendtemp = GetComponent<MeshRenderer>();
+        if(rendtemp.materials.Length > 1 && time < Time.time)   
+        {
+            rendtemp.materials[previousTemp].color = temp.color;
+            previousTemp++;
+            if( previousTemp >= width*height)
+            {
+                previousTemp = 0;
+            }
+            rendtemp.materials[previousTemp].color = Color.red;
+            time = Time.time + 1;
+        }*/
+
+        if ( map.changes == null)
         {
             Debug.LogError("Map.Changes is null");
         }
         else if (map.changes.Count > 0)
         {
-            MeshRenderer rend = GetComponent<MeshRenderer>();
 
+            MeshRenderer rend = GetComponent<MeshRenderer>();
             // Every change in the game
             foreach (Vector2 c in map.changes)
             {
                 int x = (int)c.x;
                 int y = (int)c.y;
                 int index = x * height + y;
-
-                // Place every tile as a 
-                /*var m = new Material[rend.materials.Length];
-                for(int i = 0; i < m.Length; i++)
+                
+                // Change Material
+                DTile tile = map.getTile(x,y);
+                if (!tile.item)
                 {
-                    m[i] = materials[1];
+                    int type = tile.tileType;
+                    currentMaterials[index] = materials[type];
                 }
-                rend.materials = m;*/
-                int tile = map.getTile(x, y);
-                currentMaterials[index] = materials[tile];
+                else
+                {
+                    currentMaterials[index] = itemMaterial;
+                }
                 rend.materials = currentMaterials;
 
 
-                if ( map.isWall(x, y) )
+                //Debug.Log(x + "," + y + "-> " + index + " " + materials[tile]);
+                if ( map.hasWall(x, y) )
                 {
                     DWall wall = map.getWall(x, y);
+                    if( wall == null){Debug.LogError("No Wall at position " + x + "," + y);}
                     buildWall(wall);
                 }
-                else if (map.isDoor(x, y))
+                else if (map.hasDoor(x, y))
                 {
-                    Debug.Log("BuildDoor");
                     DDoor door = map.getDoor(x, y);
+                    if (door == null) { Debug.LogError("No door at position " + x + "," + y); }
                     buildDoor(door);
                 }
-                else if (map.isWindow(x, y))
+                else if (map.hasWindow(x, y))
                 {
                     DWindow window = map.getWindow(x, y);
+                    if (window == null) { Debug.LogError("No window at position " + x + "," + y); }
                     buildWindow(window);
                 }
-                else if (map.isItem(x, y))
+                else if (map.hasItem(x, y))
                 {
                     BuildableItem item = map.getItem(x, y);
-                    if( item == null)
-                    {
-                        Debug.Log("Item is null at " + c);
-                    }
-                    Debug.Log("Item Edited" + c);
+                    if (item == null) { Debug.LogError("No item at position " + x + "," + y); }
                     buildItem(item);
                 }
                 //texture.filterMode = FilterMode.Bilinear;
@@ -202,7 +226,7 @@ public class TileMap : MonoBehaviour
                     // Check if the door positions
                     if (selectionScript.doorsModified())
                     {
-                        Debug.Log("DOORS CHANGED");
+                        //Debug.Log("DOORS CHANGED");
                         // Get the position
                         foreach (DDoor door in build.doors)
                         {
@@ -320,29 +344,28 @@ public class TileMap : MonoBehaviour
         MeshRenderer rend = GetComponent<MeshRenderer>();
         int numTiles = width * height;
         int numTriangles = numTiles * 2;
+        
+        Material starting = materials[0];
 
         currentMaterials = new Material[numTriangles];
         for (int i = 0; i < numTriangles; i++)
         {
-            currentMaterials[i] = materials[0];
+            currentMaterials[i] = Instantiate(starting);
         }
         rend.materials = currentMaterials;
 
     }
 
-
     public void BuildMesh()
     {
-        GameData data = FindObjectOfType<GameData>();
-        data.graphicsMap = this;
-        map = data.createTileMap(width, height);
+        gameData = FindObjectOfType<GameData>();
+        gameData.graphicsMap = this;
+        map = gameData.createTileMap(width, height);
 
         int numTiles = width * height;
         int numTriangles = numTiles * 2;
 
         // Vertex Calculation
-        //int vertexSize_x = width*2 + 1;
-        //int vertexSize_y = height*2 + 1;
         int numVerticies = numTriangles*6;
 
         // Generate mesh data
@@ -377,8 +400,8 @@ public class TileMap : MonoBehaviour
             normals[vIndex + 4] = Vector3.up;
             normals[vIndex + 5] = Vector3.up;
             uvs[vIndex + 3] = new Vector2(1, 0);
-            uvs[vIndex + 4] = new Vector2(1, 1);
-            uvs[vIndex + 5] = new Vector2(0, 1);
+            uvs[vIndex + 4] = new Vector2(0, 1);
+            uvs[vIndex + 5] = new Vector2(1, 1);
 
             int[] triangle = new int[6];
             triangle[0] = vIndex + 0;
@@ -418,20 +441,21 @@ public class TileMap : MonoBehaviour
         mesh_filter.mesh = mesh;
         mesh_collider.sharedMesh = mesh;
 
+        // Build textures
         buildTexture(mesh);
     }
 
     private void buildWall(DWall wall)
     {
-        Vector3 wallPosition = new Vector3(wall.position.x, 0, wall.position.y);
         BuildableRoom room = map.getRoom((int)wall.position.x, (int)wall.position.y);
-        Vector3 position = wallPosition - room.position;
+        Vector3 position = new Vector3(wall.position.x, 0, wall.position.y);
 
-        GameObject wallObject = null;
-        if((position.x == 0 || position.x == (room.width-1) ) && (position.z == 0 || position.z == (room.height-1)))
+        Vector3 roomPosition = position - room.position;
+        GameObject wallObject;
+        if((roomPosition.x == 0 || roomPosition.x == (room.width-1) ) && (roomPosition.z == 0 || roomPosition.z == (room.height-1)))
         {
             wallObject = (GameObject)Instantiate(wallCornerPrefab);
-            if( (position.x == 0 && position.z == 0) || (position.x == (room.width - 1) && position.z == (room.height-1)) )
+            if( (roomPosition.x == 0 && roomPosition.z == 0) || (roomPosition.x == (room.width - 1) && roomPosition.z == (room.height-1)) )
             {
                 wallObject.transform.GetChild(0).localRotation *= Quaternion.Euler(0, -90, 0);
             }
@@ -440,72 +464,103 @@ public class TileMap : MonoBehaviour
         {
             wallObject = (GameObject)Instantiate(wallPrefab);
         }
-        
-        wallObject.transform.position = wallPosition;
-        rotateByBounds(wallObject, room);
+
+        wallObject.transform.position = new Vector3(wall.position.x, 0, wall.position.y);
+        wall.gameObject = wallObject;
+        rotateByObject(wall);
+    }
+
+    private void rotateByObject(DDataObject o)
+    {
+        if( o.facingDirection == Navigation.Direction.North)
+        {
+            o.gameObject.transform.GetChild(0).localRotation *= Quaternion.Euler(0, 180, 0);
+        }
+        else if (o.facingDirection == Navigation.Direction.East)
+        {
+            o.gameObject.transform.GetChild(0).localRotation *= Quaternion.Euler(0, 270, 0);
+        }
+        else if (o.facingDirection == Navigation.Direction.West)
+        {
+            o.gameObject.transform.GetChild(0).localRotation *= Quaternion.Euler(0, 90, 0);
+        }
+        else
+        {
+            // South
+        }
     }
 
     private void buildWindow(DWindow window)
     {
-        if (window == null)
-        {
-            Debug.LogError("Window is null!");
-        }
-
         GameObject windowObject = (GameObject)Instantiate(windowPrefab);
         windowObject.transform.position = new Vector3(window.position.x, 0, window.position.y);
-        //windowObject.transform.parent = roomObject.transform;
-        window.gameObject = windowObject;
 
-        // Rotate it
-        BuildableRoom room = map.getRoom((int)window.position.x, (int)window.position.y);
-        rotateByBounds(windowObject, room);
+        window.gameObject = windowObject;
+        rotateByObject(window);
     }
 
     private void buildDoor(DDoor door)
     {
-        if( door == null)
-        {
-            Debug.LogError("Door is null!");
-        }
-
         GameObject doorObject = (GameObject)Instantiate(doorPrefab);
-        doorObject.transform.position = new Vector3((int)door.position.x, 0, (int)door.position.y);
-        //doorObject.transform.parent = roomObject.transform;
+        doorObject.transform.position = new Vector3(door.position.x, 0, door.position.y);
+
         door.gameObject = doorObject;
 
-        // Rotate it
-        BuildableRoom room = map.getRoom((int)door.position.x, (int)door.position.y);
-        rotateByBounds(doorObject, room);
-
-
+        Debug.Log("Door " + door.facingDirection);
+        rotateByObject(door);
     }
 
     private void buildItem(BuildableItem item)
     {
-
+        Debug.Log("Item " + item.GetType().Name);
         string name = item.GetType().Name + item.position.x + "," + item.position.z;
         GameObject itemObject = GameObject.Find(name);
+        int index = 0;
         if (itemObject == null)
         {
             for(int i = 0; i < itemScripts.Length;i++)
             {
 
-                if( itemScripts[i].GetType().Equals(item.GetType()))
+                if( itemScripts[i] == item.GetType())
                 {
+                    //Debug.Log("Index " + i);
                     itemObject = (GameObject)Instantiate(itemObjects[i]);
                     itemObject.name = name;
+                    index = i;
                     break;
                 }
             }
             if( itemObject == null)
             {
-                // No possible combinations
+                // No possible combinations 
                 Debug.LogError("Could not match type of " + item.GetType());
+            }
+
+            // Bed types
+            if (item is BuildableBed)
+            {
+                BuildableBed bed = (BuildableBed)item;
+                GameObject dirtyObject = (GameObject)Instantiate(itemObjects[index + 1]);
+                dirtyObject.name = name + "(Dirty)";
+                dirtyObject.transform.position = new Vector3((int)item.position.x, 0, (int)item.position.z);
+                dirtyObject.transform.GetChild(0).transform.rotation = item.rotation;
+                dirtyObject.SetActive(false);
+                bed.dirtyGameObject = dirtyObject;
+                Debug.Log("BuildableBed " + (index + 1));
             }
         }
         itemObject.transform.position = new Vector3((int)item.position.x, 0, (int)item.position.z);
         itemObject.transform.GetChild(0).transform.rotation = item.rotation;
+        item.gameObject = itemObject;
+
+        if (itemObject == null)
+        {
+            Debug.LogError("item.gameObject " + item.gameObject);
+        }
+
+
+
+
     }
 
     private void rotateByBounds(GameObject o, DRectangle room)

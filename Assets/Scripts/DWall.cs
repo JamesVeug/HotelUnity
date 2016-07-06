@@ -1,12 +1,23 @@
 ﻿using UnityEngine;
 
-public class DWall
+public class DWall : DDataObject
 {
-    public Vector2 position;
-    public GameObject gameObject;
 
-    public DWall(int x, int y)
+    public static DWall create(float x, float y, Navigation.Direction dir)
     {
-        position = new Vector2(x, y);
+        DWall wall = ScriptableObject.CreateInstance<DWall>();
+        wall.position = new Vector2(x, y);
+        wall.facingDirection = dir;
+
+        return wall;
+    }
+
+    public static DWall create(Vector2 position, Navigation.Direction dir)
+    {
+        DWall wall = ScriptableObject.CreateInstance<DWall>();
+        wall.position = new Vector2(position.x, position.y);
+        wall.facingDirection = dir;
+
+        return wall;
     }
 }

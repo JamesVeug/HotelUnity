@@ -1,23 +1,37 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System;
+using System.Collections.Generic;
 
-public class BuildableBed : BuildableItem{
+public abstract class BuildableBed : BuildableItem{
 
-    public BuildableBed(int x, int y): base(x, y)
+    public GameObject dirtyGameObject;
+    public bool isDirty = false;
+
+
+    private bool soldToGuest = false;
+
+    public bool isSoldToGuest()
     {
-        // Double bed
-        // xx
-        // xx
-        // xx
+        return soldToGuest;
+    }
 
-        width = 2;
-        height = 3;
-        tiles.Add(new Vector2(0, 0));
-        tiles.Add(new Vector2(1, 0));
-        tiles.Add(new Vector2(0, 1));
-        tiles.Add(new Vector2(1, 1));
-        tiles.Add(new Vector2(0, 2));
-        tiles.Add(new Vector2(1, 2));
-        origin = tiles[4]; // TileVector to set when we want to indicate this item has changed
+    public abstract Vector2 getBedPosition(int bedSideIndex);
+    public abstract int getMaxBedPositions();
+
+    public void setRoomToDirty()
+    {
+        Debug.Log("Dirty " + gameObject.name);
+        dirtyGameObject.SetActive(true);
+        gameObject.SetActive(false);
+        isDirty = true;
+    }
+
+    public void setRoomToClean()
+    {
+        Debug.Log("Clean " + gameObject.name);
+        dirtyGameObject.SetActive(false);
+        gameObject.SetActive(true);
+        isDirty = false;
     }
 }

@@ -3,19 +3,15 @@ using System.Collections;
 using System.Collections.Generic;
 using System;
 
-public class BuildableItem : DRectangle, Buildable, ICloneable, IEquatable<BuildableItem>
+public abstract class BuildableItem : Buildable, ICloneable, IEquatable<BuildableItem>
 {
     public Quaternion rotation = Quaternion.identity;
     protected Vector2 origin;
     protected List<Vector2> tiles = new List<Vector2>();
-    public BuildableItem(int x, int y)
-    {
-        this.left = x;
-        this.top = y;
-        this.width = 1;
-        this.height = 1;
-        //rotation.eulerAngles += Quaternion.Euler(0, 90, 0).eulerAngles;
-    }
+    protected List<Vector2> itemTiles = new List<Vector2>();
+    public GameObject gameObject;
+
+    public abstract DRectangle Create(int x, int y);
 
     public List<Vector2> getTiles()
     {
@@ -27,52 +23,62 @@ public class BuildableItem : DRectangle, Buildable, ICloneable, IEquatable<Build
         return t;
     }
 
+    public List<Vector2> getItemTiles()
+    {
+        List<Vector2> t = new List<Vector2>();
+        foreach (Vector2 tile in itemTiles)
+        {
+            t.Add(new Vector2(tile.x + left, tile.y + top));
+        }
+        return t;
+    }
+
     public Vector2 getOrigin()
     {
         return new Vector2(left + origin.x, top + origin.y);
     }
 
-    public void moveMouse(Vector3 movePosition)
+    public override void moveMouse(Vector3 movePosition)
     {
         throw new NotImplementedException();
     }
 
-    public void pressMouse(Vector3 pressPosition)
+    public override void pressMouse(Vector3 pressPosition)
     {
         throw new NotImplementedException();
     }
 
-    public void releaseMouse(Vector3 pressedPosition, Vector3 releasePosition)
+    public override void releaseMouse(Vector3 pressedPosition, Vector3 releasePosition)
     {
         throw new NotImplementedException();
     }
 
-    public void dragMouse(Vector3 pressedPosition, Vector3 dragPosition)
+    public override void dragMouse(Vector3 pressedPosition, Vector3 dragPosition)
     {
         throw new NotImplementedException();
     }
 
-    public void applyStage()
+    public override void applyStage()
     {
         throw new NotImplementedException();
     }
     
-    public bool hasNextStage()
+    public override bool hasNextStage()
     {
         throw new NotImplementedException();
     }
 
-    public int getStage()
+    public override int getStage()
     {
         throw new NotImplementedException();
     }
 
-    public string getProperty()
+    public override string getProperty()
     {
         throw new NotImplementedException();
     }
 
-    public void switchValue()
+    public override void switchValue()
     {
         throw new NotImplementedException();
     }
@@ -89,7 +95,7 @@ public class BuildableItem : DRectangle, Buildable, ICloneable, IEquatable<Build
         return position.Equals(other.position) && rotation.Equals(other.rotation);
     }
 
-    public bool canBeBuilt()
+    public override bool canBeBuilt()
     {
         throw new NotImplementedException();
     }

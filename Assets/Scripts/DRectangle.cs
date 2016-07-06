@@ -2,21 +2,21 @@
 using System.Collections;
 using System;
 
-public class DRectangle {
+[System.Serializable]
+public class DRectangle : ScriptableObject{ 
 
     public int left;
     public int top;
     public int width;
     public int height;
 
-    public DRectangle(){}
-
-    protected DRectangle(int x, int y, int width, int height)
+    public virtual DRectangle Create(int x, int y, int width, int height)
     {
         left = x;
         top = y;
         this.width = width;
         this.height = height;
+        return this;
     }
 
     public int right
@@ -61,15 +61,24 @@ public class DRectangle {
         return true;
     }
 
-    
-    // Returns a new DRectangle object with the dimensions reduced by (x,y)*2
-    public DRectangle collapse(int shrinkWidthBy, int shrinkHeightBy)
+    public bool contains(DRectangle other)
     {
-        DRectangle rect = new DRectangle();
-        rect.left = left + shrinkWidthBy;
-        rect.top = top + shrinkHeightBy;
-        rect.width = width - (shrinkWidthBy * 2);
-        rect.height = height - (shrinkHeightBy * 2);
+        if (left   > other.left)   return false;
+        if (right  < other.right)  return false;
+        if (top    > other.top)    return false;
+        if (bottom < other.bottom) return false;
+        return true;
+    }
+
+
+    // Returns a new DRectangle object with the dimensions reduced by (x,y)*2
+    public DRectangle collapse(int shrinkWidthBy, int shrinkHeightBy, int minWidth, int minHeight)
+    {
+        DRectangle rect = ScriptableObject.CreateInstance<DRectangle>();
+        rect.left   = left + shrinkWidthBy;
+        rect.top    = top + shrinkHeightBy;
+        rect.width  = Mathf.Max(minWidth, width - (shrinkWidthBy * 2));
+        rect.height = Mathf.Max(minHeight,height - (shrinkHeightBy * 2));
         //Debug.Log("Old " + this.ToString());
         //Debug.Log("New " + rect.ToString());
 

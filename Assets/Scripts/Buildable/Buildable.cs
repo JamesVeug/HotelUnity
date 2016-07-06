@@ -1,17 +1,23 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System;
 
-public interface Buildable {
+[Serializable]
+public abstract class Buildable : DRectangle{
     
-    int getStage();
-    string getProperty();
-    void switchValue();
-    void applyStage();
-    bool hasNextStage();
-    bool canBeBuilt();
+    public override DRectangle Create(int x, int y, int width, int height) {
+        return base.Create(x, y, width, height);
+    }
 
-    void pressMouse(Vector3 pressPosition);
-    void moveMouse(Vector3 movePosition);
-    void releaseMouse(Vector3 pressedPosition, Vector3 releasePosition);
-    void dragMouse(Vector3 pressedPosition, Vector3 dragPosition);
+    public abstract int getStage();
+    public abstract string getProperty();
+    public abstract void switchValue();
+    public abstract void applyStage();
+    public abstract bool hasNextStage();
+    public abstract bool canBeBuilt();
+
+    public abstract void pressMouse(Vector3 pressPosition);
+    public abstract void moveMouse(Vector3 movePosition);
+    public abstract void releaseMouse(Vector3 pressedPosition, Vector3 releasePosition);
+    public abstract void dragMouse(Vector3 pressedPosition, Vector3 dragPosition);
 }

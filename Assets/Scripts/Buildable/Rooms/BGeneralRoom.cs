@@ -1,21 +1,13 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 public class BGeneralRoom : BuildableRoom{
 
-    public BGeneralRoom() : this(0, 0, 0, 0)
+    public List<Type> placeableItems = new List<Type>
     {
-
-    }
-
-    public BGeneralRoom(int x, int y, int width, int height) : base(x,y,width,height)
-    {
-    }
-
-    public List<BuildableItem> placeableItems = new List<BuildableItem>
-    {
-        new BuildableChair(0,0),
-        new BuildablePainting(0,0)
+        typeof(BuildableChair),
+        typeof(BuildablePainting)
     };
 
     public override bool canBeBuilt()
@@ -23,8 +15,13 @@ public class BGeneralRoom : BuildableRoom{
         return selectionScript.isValid();
     }
 
-    public override List<BuildableItem> getPlaceableItems()
+    public override List<Type> getPlaceableItems()
     {
         return placeableItems;
+    }
+
+    public override Dictionary<Type, int> getRequiredItems()
+    {
+        return new Dictionary<Type, int>();
     }
 }

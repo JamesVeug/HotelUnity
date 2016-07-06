@@ -1,84 +1,68 @@
 ﻿using UnityEngine;
 using System.Collections.Generic;
+using System;
 
-public class DTileMap  {
+[Serializable]
+public class DTileMap : MonoBehaviour{
 
-    public const int GRASS = 0;
-    public const int ROOM = 1;
-    public const int WALL = 2;
-    public const int DOOR = 3;
-    public const int WINDOW = 4;
-    public const int ITEM = 5;
+    // Tyile Types
+    // Edit method to indicate how many in total we have 
 
     public int width;
     public int height;
-    int[,] tiles;
+
+    [SerializeField]
+    private DTile[] tiles;
+
+    BuildableRoom roomBeingConstructed;
+    List<BuildableRoom> sharedRooms;
     List<BuildableRoom> rooms;
+    List<BReceptionRoom> receptionRooms;
+    List<BHouseKeepingRoom> houseKeepingRooms;
+    List<BBedroom> bedRooms;
     public List<Vector2> changes;
 
-    public DTileMap(int width, int height)
+    public void initialize(int width, int height)
     {
-
         this.width = width;
         this.height = height;
 
-        tiles = new int[width, height];
+        tiles = new DTile[width* height];
         rooms = new List<BuildableRoom>();
+        receptionRooms = new List<BReceptionRoom>();
+        houseKeepingRooms = new List<BHouseKeepingRoom>();
+        bedRooms = new List<BBedroom>();
         changes = new List<Vector2>();
 
-        /*int randomRooms = 5;
-        while(rooms.Count < randomRooms)
-        {
-            int rsx = Random.Range(4, 12);
-            int rsy = Random.Range(4, 12);
-            BuildableRoom room = new BuildableRoom(
-                Random.Range(0, width - rsx),
-                Random.Range(0, height - rsy),
-                rsx,
-                rsy);
 
-            if (!collides(room)) {
-                rooms.Add(room);
-                MakeRoom(room);
+        // Pathway
+        for (int i = 0; i < width; i++)
+        {
+            for (int j = 0; j < height; j++)
+            {
+                tiles[j * width + i] = DTile.GRASS();
+                changes.Add(new Vector2(i, j));
             }
         }
-
-        foreach(BuildableRoom r in rooms)
-        {
-            DWall wall;
-            bool horizontal = Random.Range(0, 1) == 0;
-            int x;
-            int y;
-            if( horizontal)
-            {
-                x = (int)(Random.Range(1, r.width-1) + r.position.x);
-                y = (int)(Random.Range(0, 1)*(r.height-1) + r.position.z);
-                wall = r.getWall(x, y);
-            }
-            else
-            {
-                x = (int)(Random.Range(0, 1) * (r.width-1) + r.position.x);
-                y = (int)(Random.Range(1, r.height-1) + r.position.z);
-                wall = r.getWall(x, y);
-            }
-            
-            DDoor door = new DDoor(x, y);
-            r.doors.Add(door);
-            tiles[x, y] = DOOR;
-
-            if (wall != null)
-            {
-                Object.Destroy(wall.gameObject);
-            }
-            r.walls.Remove(wall);
-        }*/
-
-        changes.Clear();
     }
 
-    public int getTile(int x, int y)
+    public void setTile(int i, int j, int type)
     {
-        return tiles[x, y];
+        if (tiles[j * width + i].tileType != type)
+        {
+            tiles[j * width + i].tileType = type;
+            changes.Add(new Vector2(i, j));
+        }
+    }
+
+    public int getTileType(int x, int y)
+    {
+        return tiles[y * width + x].tileType;
+    }
+
+    public DTile getTile(int x, int y)
+    {
+        return tiles[y * width + x];
     }
 
     public bool collides(DRectangle other)
@@ -96,30 +80,64 @@ public class DTileMap  {
     public DWall getWall(int x, int y)
     {
         BuildableRoom room = getRoom(x, y);
+        if( room == null)
+        {
+            Debug.LogWarning("No Room at " + x + "," + y);
+            return null;
+        }
+        //Debug.Log("Room " + room.left + "," + room.top + " Walls: " + room.walls.Count);
+
+        // Get wall from room
         return room.getWall(x, y);
     }
 
     public DWindow getWindow(int x, int y)
     {
         BuildableRoom room = getRoom(x, y);
+        if (room == null)
+        {
+            return null;
+        }
+
+        // Get window from room
         return room.getWindow(x, y);
     }
 
     public DDoor getDoor(int x, int y)
     {
         BuildableRoom room = getRoom(x, y);
+        if (room == null)
+        {
+            return null;
+        }
+
+        // Get door from room
         return room.getDoor(x, y);
     }
 
     public BuildableItem getItem(int x, int y)
     {
         BuildableRoom room = getRoom(x, y);
+        if (room == null)
+        {
+            return null;
+        }
+
+        // Get item from room
         return room.getItem(x, y);
     }
 
     public BuildableRoom getRoom(int x, int y)
     {
         Vector3 pos = new Vector3(x, 0, y);
+
+        // Check if this area is in the room being constructed
+        if (roomBeingConstructed != null && roomBeingConstructed.contains(pos))
+        {
+            return roomBeingConstructed;
+        }
+
+        // Check other rooms
         foreach(BuildableRoom room in rooms)
         {
             if (room.contains(pos))
@@ -127,99 +145,143 @@ public class DTileMap  {
                 return room;
             }
         }
+
+        // Could not find the room
         return null;
     }
 
-    public BuildableRoom MakeRoom(BuildableRoom room)
+    public void RecordRoom()
     {
-        //Debug.Log("d " + l + " " + t + " " + w + " " + h);
-        /*List<DDoor> doors = new List<DDoor>();
-        List<DWindow> windows = new List<DWindow>();
-
-        foreach (DDoor v in room.doors)
+        if(roomBeingConstructed is BReceptionRoom)
         {
-            doors.Add(v);
+            receptionRooms.Add((BReceptionRoom)roomBeingConstructed);
         }
-        foreach (DWindow v in room.windows)
+        if (roomBeingConstructed is BHouseKeepingRoom)
         {
-            windows.Add(v);
-        }*/
+            houseKeepingRooms.Add((BHouseKeepingRoom)roomBeingConstructed);
+        }
 
+        // Bedroom Types
+        if (roomBeingConstructed is BBedroom)
+        {
+            bedRooms.Add((BBedroom)roomBeingConstructed);
+        }
+        if (roomBeingConstructed is BSharedBedroom)
+        {
+            bedRooms.Add((BBedroom)roomBeingConstructed);
+        }
 
-        //if (!collides(room))
-        //{
-            rooms.Add(room);
-            ApplyToTileMap(room);
-        //}
-        return room;
+        rooms.Add(roomBeingConstructed);
+        roomBeingConstructed = null;
     }
 
     public void AddItem(BuildableItem item)
     {
-        var requiredTiles = item.getTiles();
+        var requiredTiles = item.getItemTiles();
         foreach(Vector2 tile in requiredTiles) {
-            tiles[(int)tile.x, (int)tile.y] = ITEM;
+            tiles[(int)(tile.y * width + tile.x)].item = true;
             changes.Add(new Vector2((int)tile.x, (int)tile.y));
         }
     }
 
-    void ApplyToTileMap(BuildableRoom room)
+    public int maxTileTypes()
     {
+        return 7;
+    }
+
+    public void ApplyToTileMap(BuildableRoom room)
+    {
+        roomBeingConstructed = room;
         for ( int i = 0; i < room.width; i++)
         {
             for (int j = 0; j < room.height; j++)
             {
+                bool isNorth = j == room.height-1;
+                bool isSouth = j == 0;
+                bool isWest =  i == 0;
+                bool isEast =  i == room.width-1;
                 int x = room.left + i;
                 int y = room.top + j;
 
-                if (room.getDoor(x, y) != null)
+                DDoor door = room.getDoor(x, y);
+                DWindow window = room.getWindow(x, y);
+                if (door != null)
                 {
-                    Debug.Log("PlacedDoor"+x + "," + y);
-                    tiles[x, y] = DOOR;
+                    //Debug.Log("PlacedDoor"+x + "," + y);
+
+                    Navigation.Direction dir = Navigation.Direction.North;
+                    if (isNorth) { tiles[y * width + x].setNorthDoor(); dir = Navigation.Direction.North; }
+                    if (isSouth) { tiles[y * width + x].setSouthDoor(); dir = Navigation.Direction.South; }
+                    if (isWest) { tiles[y * width + x].setWestDoor(); dir = Navigation.Direction.West; }
+                    if (isEast) { tiles[y * width + x].setEastDoor(); dir = Navigation.Direction.East; }
+                    door.facingDirection = dir;
                 }
-                else if ( room.getWindow(x, y) != null)
+                else if (window != null)
                 {
-                    Debug.Log("PlacedWindow" + x + "," + y);
-                    tiles[x, y] = WINDOW;
+                    //Debug.Log("PlacedWindow" + x + "," + y);
+
+                    Navigation.Direction dir = Navigation.Direction.North;
+                    if (isNorth) { tiles[y * width + x].setNorthWindow(); dir = Navigation.Direction.North; }
+                    if (isSouth) { tiles[y * width + x].setSouthWindow(); dir = Navigation.Direction.South; }
+                    if (isWest) { tiles[y * width + x].setWestWindow(); dir = Navigation.Direction.West; }
+                    if (isEast) { tiles[y * width + x].setEastWindow(); dir = Navigation.Direction.East; }
+                    window.facingDirection = dir;
                 }
                 else if (i == 0 || i == room.width - 1 || j == 0 || j == room.height - 1 )
                 {
-                    //Debug.Log(x + "," + y);
-                    tiles[x,y] = WALL;
-                    DWall wall = new DWall(x,y);
+                    //Debug.Log("Wall " + x + "," + y);
+
+                    Navigation.Direction dir = Navigation.Direction.North;
+                    if (isNorth) { tiles[y * width + x].setNorthWall(); dir = Navigation.Direction.North; }
+                    if (isSouth) { tiles[y * width + x].setSouthWall(); dir = Navigation.Direction.South; }
+                    if (isWest)  { tiles[y * width + x].setWestWall();  dir = Navigation.Direction.West; }
+                    if (isEast)  { tiles[y * width + x].setEastWall();  dir = Navigation.Direction.East; }
+                    DWall wall = DWall.create(x,y, dir);
                     room.walls.Add(wall);
                 }
-                else {
-                    tiles[x,y] = ROOM;
-                }
+
+                tiles[y * width + x].setRoom();
                 changes.Add(new Vector2(x, y));
             }
         }
     }
 
-    public bool isWindow(int x, int y)
+    public bool hasWindow(int x, int y)
     {
-        return tiles[x, y] == WINDOW;
+        DTile tile = getTile(x, y);
+        return tile.northHasWindow() || tile.westHasWindow() || tile.eastHasWindow() || tile.southHasWindow();
     }
 
-    public bool isWall(int x, int y)
+    public bool isGrass(int x, int y)
     {
-        return tiles[x, y] == WALL;
+        return getTile(x, y).isGrass();
     }
 
-    public bool isDoor(int x, int y)
+    public bool isWalkWay(int x, int y)
     {
-        return tiles[x, y] == DOOR;
+        return getTile(x, y).isWalkway();
     }
 
-    public bool isItem(int x, int y)
+    public bool hasWall(int x, int y)
     {
-        return tiles[x, y] == ITEM;
+        DTile tile = getTile(x, y);
+        return tile.northHasWall() || tile.westHasWall() || tile.eastHasWall() || tile.southHasWall();
+    }
+
+    public bool hasDoor(int x, int y)
+    {
+        DTile tile = getTile(x, y);
+        return tile.northHasDoor() || tile.westHasDoor() || tile.eastHasDoor() || tile.southHasDoor();
+    }
+
+    public bool hasItem(int x, int y)
+    {
+        return getTile(x, y).item;
     }
 
     public bool isRoom(int x, int y)
     {
-        return tiles[x, y] == ROOM;
+        return getTile(x, y).isRoom();
     }
 
     public bool isRoom(DRectangle rect)
@@ -228,7 +290,7 @@ public class DTileMap  {
         {
             for (int y = rect.top; y <= rect.bottom; y++)
             {
-                if( tiles[x,y] != ROOM)
+                if( !getTile(x, y).isRoom() )
                 {
                     return false;
                 }
@@ -237,13 +299,13 @@ public class DTileMap  {
         return true;
     }
 
-    public bool isWall(DRectangle rect)
+    public bool hasWall(DRectangle rect)
     {
         for (int x = rect.left; x <= rect.right; x++)
         {
             for (int y = rect.top; y <= rect.bottom; y++)
             {
-                if (tiles[x, y] != WALL)
+                if ( !hasWall(x, y) )
                 {
                     return false;
                 }
@@ -254,13 +316,13 @@ public class DTileMap  {
 
     public void destroy()
     {
-        foreach(BuildableRoom r in rooms)
+        /*foreach(BuildableRoom r in rooms)
         {
             foreach(DWall w in r.walls)
             {
-                Object.Destroy(w.gameObject);
+                System.Object.Destroy(w.gameObject);
             }
-        }
+        }*/
     }
 
     public List<DWall> getWalls()
@@ -305,6 +367,21 @@ public class DTileMap  {
         return windows;
     }
 
+    public List<BReceptionRoom> getReceptionRooms()
+    {
+        return receptionRooms;
+    }
+
+    public List<BHouseKeepingRoom> getHouseKeepingRooms()
+    {
+        return houseKeepingRooms;
+    }
+
+    public List<BBedroom> getBedrooms()
+    {
+        return bedRooms;
+    }
+
     public void print()
     {
         for (int y = 0; y < height; y++)
@@ -312,7 +389,7 @@ public class DTileMap  {
             string row = "";
             for (int x = 0; x < width; x++)
             {
-                row = row + tiles[x, y];
+                row = row + getTile(x, y);
             }
             Debug.Log(row);
         }

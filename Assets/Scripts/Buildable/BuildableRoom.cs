@@ -3,7 +3,8 @@ using System.Collections;
 using System;
 using System.Collections.Generic;
 
-public abstract class BuildableRoom : DRectangle, Buildable
+[Serializable]
+public abstract class BuildableRoom : Buildable
 {
     public const int STAGE_BLUEPRINT = 0;
     public const int STAGE_WINDOWSDOORS = 1;
@@ -48,15 +49,6 @@ public abstract class BuildableRoom : DRectangle, Buildable
     protected GameData data;
     protected SelectionTile selectionScript;
     protected GameObject selectionCube;
-    protected BuildableRoom() : this(0, 0, 0, 0)
-    {
-
-    }
-
-    protected BuildableRoom(int x, int y, int width, int height) : base(x, y, width, height)
-    {
-        
-    }
 
     private void initialize()
     {
@@ -71,7 +63,7 @@ public abstract class BuildableRoom : DRectangle, Buildable
         initialized = true;
     }
 
-    public void moveMouse(Vector3 movePosition)
+    public override void moveMouse(Vector3 movePosition)
     {
         if (!initialized) { initialize(); }
 
@@ -90,25 +82,17 @@ public abstract class BuildableRoom : DRectangle, Buildable
 
     public BuildableItem getCurrentBuildingItem()
     {
-        return getPlaceableItems().Count == 0 ? null : getPlaceableItems()[currentItemIndex];
+        return editingItem;
     }
 
-    public void pressMouse(Vector3 pressPosition)
+    public override void pressMouse(Vector3 pressPosition)
     {
         if (!initialized) { initialize(); }
 
         if (Stage == STAGE_BLUEPRINT && Property == PROPERTY_BP_RESIZE)
         {
-            this.left = (int)selectionCube.transform.position.x;
-            this.top = (int)selectionCube.transform.position.z;
-            this.width = (int)selectionCube.transform.localScale.x;
-            this.height = (int)selectionCube.transform.localScale.z;
-            //Debug.DrawLine(new Vector3(left, 1, top), new Vector3(left, 1, bottom), Color.blue,10);
-            //Debug.DrawLine(new Vector3(left, 1, top), new Vector3(right, 1, top), Color.red, 10);
-
-
             // Check if we clicked on the rectangle
-            if (this.contains(pressPosition))
+            if (selectionScript.rect.contains(pressPosition))
             {
                 // Clicked inside the rectangle. We can drag it now
                 Property = PROPERTY_BP_MOVE;
@@ -122,7 +106,7 @@ public abstract class BuildableRoom : DRectangle, Buildable
         }
     }
 
-    public void releaseMouse(Vector3 pressedPosition, Vector3 releasePosition)
+    public override void releaseMouse(Vector3 pressedPosition, Vector3 releasePosition)
     {
         if (!initialized) { initialize(); }
 
@@ -139,12 +123,11 @@ public abstract class BuildableRoom : DRectangle, Buildable
         else if (Stage == STAGE_WINDOWSDOORS && Property == PROPERTY_WD_DOOR)
         {
             // Add door
-            Vector3 worldPosition = releasePosition - selectionCube.transform.position;
-            if ((worldPosition.x == 0 || worldPosition.x == width - 1 || worldPosition.z == 0 || worldPosition.z == height - 1) && !doors.Contains(new DDoor(new Vector2(worldPosition.x, worldPosition.z))))
-            {
-                Vector2 position = new Vector2(left + worldPosition.x, top + worldPosition.z);
-
-                doors.Add(new DDoor(position));
+            if (canPlaceDoor(releasePosition)){
+                Vector2 position = new Vector2(Mathf.Ceil(releasePosition.x), Mathf.Ceil(releasePosition.z));
+                
+                DDoor door = DDoor.create(position, getDirection(position));
+                doors.Add(door);
                 data.dTileMap.changes.Add(new Vector2(position.x, position.y));
                 if (doors.Count >= maxDoors)
                 {
@@ -155,10 +138,13 @@ public abstract class BuildableRoom : DRectangle, Buildable
         else if (Stage == STAGE_WINDOWSDOORS && Property == PROPERTY_WD_WINDOW)
         {
             // Add Window
-            Vector3 worldPosition = releasePosition - selectionCube.transform.position;
-            if ((worldPosition.x == 0 || worldPosition.x == width - 1 || worldPosition.z == 0 || worldPosition.z == height - 1) && !windows.Contains(new DWindow(new Vector2(worldPosition.x, worldPosition.z))))
+            if (canPlaceWindow(releasePosition))
             {
-                windows.Add(new DWindow(new Vector2(left + worldPosition.x, top + worldPosition.z)));
+                Debug.Log("=======Window=======");
+                Vector2 position = new Vector2(Mathf.Ceil(releasePosition.x), Mathf.Ceil(releasePosition.z));
+                DWindow window = DWindow.create(position, getDirection(position));
+                Debug.Log("Dir " + window.facingDirection);
+                windows.Add(window);
             }
         }
         else if (Stage == STAGE_ITEMS && Property == PROPERTY_ITEMS_PLACE)
@@ -172,11 +158,13 @@ public abstract class BuildableRoom : DRectangle, Buildable
             if (selectionScript.isValid())
             {
                 // Add Item
-                BuildableItem clone = (BuildableItem)getPlaceableItems()[currentItemIndex].Clone();
-                clone.left = (int)selectionCube.transform.position.x;
-                clone.top = (int)selectionCube.transform.position.z;
-                items.Add(clone);
-                data.dTileMap.AddItem(clone);
+                //BuildableItem clone = (BuildableItem)getPlaceableItems()[currentItemIndex].Clone();
+                editingItem.left = (int)selectionCube.transform.position.x;
+                editingItem.top = (int)selectionCube.transform.position.z;
+                addItem(editingItem);
+                data.dTileMap.AddItem(editingItem);
+                editingItem = (BuildableItem)ScriptableObject.CreateInstance(getPlaceableItems()[currentItemIndex].ToString());
+                editingItem.Create(0, 0);
             }
             else if (pressedPosition.Equals(releasePosition))
             {
@@ -212,7 +200,104 @@ public abstract class BuildableRoom : DRectangle, Buildable
         //Debug.Log("Stage: " + Stage);
     }
 
-    public void dragMouse(Vector3 pressedPosition, Vector3 dragPosition)
+    private Navigation.Direction getDirection(Vector2 worldPosition)
+    {
+        Vector2 roomPosition = new Vector2(
+            worldPosition.x - selectionCube.transform.position.x,
+            worldPosition.y - selectionCube.transform.position.z
+        );
+        
+        if (roomPosition.x == 0)
+        {
+            return Navigation.Direction.West;
+        }
+        else if (roomPosition.x == selectionCube.transform.localScale.x-1)
+        {
+            return Navigation.Direction.East;
+        }
+        else if (roomPosition.y == 0)
+        {
+            return Navigation.Direction.South;
+        }
+        else if (roomPosition.y == selectionCube.transform.localScale.y-1)
+        {
+            return Navigation.Direction.North;
+        }
+
+        //Debug.Log("Invalid " + roomPosition + " - > " + selectionCube.transform.position + " " + selectionCube.transform.localScale);
+        return Navigation.Direction.North;
+    }
+
+    private bool canPlaceDoor(Vector3 releasePosition)
+    {
+        float width = selectionCube.transform.localScale.x;
+        float height = selectionCube.transform.localScale.z;
+        Vector3 worldPosition = releasePosition - selectionCube.transform.position;
+
+        // Make sure it's inside rect or not on the walls 
+        if (!selectionScript.rect.contains(releasePosition) || selectionScript.rect.collapse(1, 1, 1, 1).contains(releasePosition))
+        {
+            return false;
+        }
+
+        
+        if (doors.Contains(DDoor.create(worldPosition.x, worldPosition.z, getDirection(releasePosition))))
+        {
+            return false;
+        }
+        if ((worldPosition.x == 0 || worldPosition.x == width-1) && (worldPosition.z <= 0 || worldPosition.z >= height) )
+        {
+            return false;
+        }
+        if ((worldPosition.z == 0 || worldPosition.z == height-1) && (worldPosition.x <= 0 || worldPosition.x >= height))
+        {
+            return false;
+        }
+
+        return true;
+    }
+
+    private bool canPlaceWindow(Vector3 releasePosition)
+    {
+        float width = selectionCube.transform.localScale.x;
+        float height = selectionCube.transform.localScale.z;
+        Vector3 worldPosition = releasePosition - selectionCube.transform.position;
+
+        // Make sure it's inside rect or not on the walls 
+        if( !selectionScript.rect.contains(releasePosition) || selectionScript.rect.collapse(1,1,1,1).contains(releasePosition))
+        {
+            return false;
+        }
+
+        // Check we already have a door in this area
+        if (doors.Contains(DDoor.create(new Vector2(worldPosition.x, worldPosition.z),getDirection(releasePosition))))
+        {
+            return false;
+        }
+
+        // Check we already have a window there
+        if (windows.Contains(DWindow.create(new Vector2(worldPosition.x, worldPosition.z), getDirection(releasePosition))))
+        {
+            return false;
+        }
+        if ((worldPosition.x == 0 || worldPosition.x == width - 1) && (worldPosition.z <= 0 || worldPosition.z >= height))
+        {
+            return false;
+        }
+        if ((worldPosition.z == 0 || worldPosition.z == height - 1) && (worldPosition.x <= 0 || worldPosition.x >= width))
+        {
+            return false;
+        }
+
+        return true;
+    }
+
+    protected virtual void addItem(BuildableItem clone)
+    {
+        items.Add(clone);
+    }
+
+    public override void dragMouse(Vector3 pressedPosition, Vector3 dragPosition)
     {
         if (!initialized) { initialize(); }
 
@@ -224,11 +309,10 @@ public abstract class BuildableRoom : DRectangle, Buildable
         int top = (int)Mathf.Max(dragPosition.z, pressedPosition.z);
         int width = (int)(right - left);
         int height = (int)(top - bottom) + 1;
-        this.top = bottom;
+        /*this.top = bottom;
         this.left = left;
         this.width = width;
-        this.height = height;
-
+        this.height = height;*/
 
         if (Stage == STAGE_BLUEPRINT && Property == PROPERTY_BP_CREATE)
         {
@@ -244,15 +328,15 @@ public abstract class BuildableRoom : DRectangle, Buildable
         {
             // We are moving this rectangle
             selectionCube.transform.position = originalPosition + change;
+            //this.top = (int)(selectionCube.transform.position.z-height);
+            //this.left = (int)selectionCube.transform.position.x;
         }
     }
 
-    public void applyStage()
+    public override void applyStage()
     {
         if (Stage == STAGE_BLUEPRINT && Property == PROPERTY_BP_RESIZE)
         {
-            //selectionCube.transform.GetChild(0).localScale += new Vector3(0,2.4f,0);
-            //selectionCube.transform.position += new Vector3(0, 1.2f, 0);
             Stage = STAGE_WINDOWSDOORS;
             Property = PROPERTY_WD_DOOR;
         }
@@ -265,12 +349,15 @@ public abstract class BuildableRoom : DRectangle, Buildable
                 this.left = (int)selectionCube.transform.position.x;
                 this.top = (int)selectionCube.transform.position.z;
 
-                data.dTileMap.MakeRoom(this);
+                data.dTileMap.ApplyToTileMap(this);
 
                 Property = PROPERTY_ITEMS_PLACE;
                 Stage = STAGE_ITEMS;
                 currentItemIndex = 0;
 
+                editingItem = ((BuildableItem)ScriptableObject.CreateInstance(getPlaceableItems()[currentItemIndex].ToString()));
+                editingItem.Create(0, 0);
+                //Debug.Log("Eiditing " + editingItem);
 
                 selectionCube.transform.GetChild(0).localScale = new Vector3(1, 0.2f, 1);
                 selectionCube.transform.GetChild(0).localPosition = new Vector3(0.5f, 0.125f, 0.5f);
@@ -281,19 +368,19 @@ public abstract class BuildableRoom : DRectangle, Buildable
         Debug.Log("Stage: " + Stage);
     }
 
-    public int getStage()
+    public override int getStage()
     {
         return Stage;
     }
 
-    public string getProperty()
+    public override string getProperty()
     {
         return Property;
     }
 
-    public bool hasNextStage()
+    public override bool hasNextStage()
     {
-        return Stage != STAGE_ITEMS;
+        return Stage != STAGE_ITEMS || !finishedPlacingItems();
     }
 
     public DWall getWall(int x, int y)
@@ -344,16 +431,84 @@ public abstract class BuildableRoom : DRectangle, Buildable
         return null;
     }
 
-    public void switchValue()
+    public override void switchValue()
     {
-        Debug.Log("SWITCHING");
         currentItemIndex++;
         if (currentItemIndex >= getPlaceableItems().Count)
         {
             currentItemIndex = 0;
         }
+        editingItem = (BuildableItem)ScriptableObject.CreateInstance(getPlaceableItems()[currentItemIndex].ToString());
+        editingItem.Create(0, 0);
     }
 
-    public abstract bool canBeBuilt();
-    public abstract List<BuildableItem> getPlaceableItems();
+    private bool finishedPlacingItems()
+    {
+        // Create dictionary of what we have
+        Dictionary<Type, int> placedItems = new Dictionary<Type, int>();
+        foreach(BuildableItem item in items)
+        {
+            Type key = item.GetType();
+            if (placedItems.ContainsKey(key))
+            {
+                placedItems[key] += 1;
+            }
+            else
+            {
+                placedItems.Add(key, 1);
+            }
+        }
+
+        // Compare it
+        foreach(Type i in getRequiredItems().Keys)
+        {
+            bool contains = false;
+            foreach (Type j in placedItems.Keys)
+            {
+                if( j == i || j.IsSubclassOf(i))
+                {
+
+                    if (placedItems[j] < getRequiredItems()[i])
+                    {
+                        Debug.Log("Count of " + i + " " + placedItems[j] + " < " + getRequiredItems()[i]);
+                        return false;
+                    }
+                    contains = true;
+                }
+            }
+
+
+            if ( !contains )
+            {
+                Debug.Log("User has not placed " + i);
+                return false;
+            }
+        }
+
+        // Acceptable
+        return true;
+
+    }
+
+    public override bool Equals(object obj)
+    {
+        if (!base.Equals(obj))
+        {
+            return false;
+        }
+        if ( !(obj is Buildable) )
+        {
+            return false;
+        }
+
+        return true;
+    }
+
+    public override int GetHashCode()
+    {
+        return base.GetHashCode();
+    }
+    
+    public abstract List<Type> getPlaceableItems();
+    public abstract Dictionary<Type, int> getRequiredItems();
 }
