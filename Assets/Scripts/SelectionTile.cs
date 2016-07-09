@@ -6,8 +6,6 @@ using System;
 [Serializable]
 public class SelectionTile : MonoBehaviour {
     public GameObject tileObject;
-    public Vector3 defaultTileObjectSize = new Vector3(1, 0.5f, 1);
-    public Vector3 defulatTileObjectPosition = new Vector3(0.5f, 0.125f, 0.5f);
 
     public Material selectionFailMaterial;
     public Material selectionWorkMaterial;
@@ -27,78 +25,162 @@ public class SelectionTile : MonoBehaviour {
 
     public DRectangle rect;
     private GameData data;
-    private Renderer rend;
+    private List<Renderer> rend;
     private bool valid;
+    private List<GameObject> tilesSelectionObjects = new List<GameObject>();
 
     // Use this for initialization
     void Start ()
     {
-        rend = tileObject.GetComponent<Renderer>();
+        rend = new List<Renderer>();// tileObject.GetComponent<Renderer>();
         data = FindObjectOfType<GameData>();
-        rect = ScriptableObject.CreateInstance<DRectangle>();
+        rect = ScriptableObject.CreateInstance<DRectangle>().Create(0,0,1,1);
     }
 	
 	// Update is called once per frame
 	void LateUpdate ()
     {
-        Vector3 asignedPosition = new Vector3(
-            Mathf.Clamp(transform.position.x, 0, data.dTileMap.width - transform.localScale.x),
+
+
+        /*Vector3 asignedPosition = new Vector3(
+            Mathf.Clamp(rect.left, 0, data.dTileMap.width - rect.left),
             transform.position.y,
-            Mathf.Clamp(transform.position.z, 0, data.dTileMap.height - transform.localScale.z)
-        );
-        transform.position = asignedPosition;
-
-        rect.left = (int)transform.position.x;
-        rect.top = (int)transform.position.z;
-        rect.width = (int)transform.localScale.x;
-        rect.height = (int)transform.localScale.z;
-        //Debug.DrawLine(new Vector3(rect.left, 0.5f, rect.top), new Vector3(rect.left, 0.5f, rect.top+rect.height));
-        //Debug.DrawLine(new Vector3(rect.left, 0.5f, rect.top), new Vector3(rect.left+rect.width, 0.5f, rect.top));
-
-        // We are dragging. Check for correct size
-        //Vector3 size = transform.localScale + new Vector3(1, 0, 1);
+            Mathf.Clamp(rect.top, 0, data.dTileMap.height - rect.top)
+        );*/
+        transform.position = new Vector3(rect.left,0,rect.top);
+        buildGraphics();
 
         if (builderStage == BuildableRoom.STAGE_ITEMS)
         {
-            //Debug.Log("items");
-            // Placing items. Check We are placing it in the current room
-            BuildableRoom room = (BuildableRoom)builder;
-            BuildableItem placingItem = room.getCurrentBuildingItem();
-            rect.width = (int)placingItem.width;
-            rect.height = (int)placingItem.height;
-
-            Vector3 scale = new Vector3(rect.width, 1, rect.height);
-            transform.localScale = scale;
-
-            //DRectangle innerRoom = room.collapse(1, 1, 1 ,1);
-            // && data.navigation.canBeWalkedOn(rect)
-            if (room.contains(rect) && canHaveItemsBuiltOn(rect))
-            {
-                // We are inside the room
-                // Check we aren't clicking on an item already
-                rend.material = selectionWorkMaterial;
-                valid = true;
-            }
-            else
-            {
-                rend.material = selectionFailMaterial;
-                valid = false;
-            }
+            setupSelectionTileForItems();
         }
         else
         {
-            //DRectangle floorRect = rect.collapse(1, 1);
-            if (rect.width < 5 || rect.height < 5 || data.dTileMap.collides(rect) || !canHaveRoomBuiltOn(rect))
-            {
-                rend.material = selectionFailMaterial;
-                valid = false;
-            }
-            else {
-                rend.material = selectionWorkMaterial;
-                valid = true;
-            }
+            setupSelectionTileForBuildingARoom();
         }
-        rend.material.mainTextureScale = new Vector2(rect.width, rect.height);
+    }
+
+    public void setupSelectionTileForItems()
+    {
+        // Placing items. Check We are placing it in the current room
+        BuildableRoom room = (BuildableRoom)builder;
+        BuildableItem placingItem = room.getCurrentBuildingItem();
+        rect.width = (int)placingItem.width;
+        rect.height = (int)placingItem.height;
+
+        // Valid by default. Prove it wrong!
+        valid = true;
+
+        // Render the position
+        List<Vector2> tiles = room.getCurrentBuildingItem().getTiles();
+        Debug.Log("Tiles " + tiles.Count);
+
+        DRectangle temp = ScriptableObject.CreateInstance<DRectangle>();
+        for (int i = 0; i < rend.Count; i++)
+        {
+            Renderer r = rend[i];
+            GameObject o = tilesSelectionObjects[i];
+
+            //Debug.Log(tilesSelectionObjects[i]);
+            //Debug.Log(tiles[i]);
+            o.transform.localPosition = new Vector3(tiles[i].x - rect.width/2, 0, tiles[i].y - rect.height / 2);
+            o.transform.localScale = Vector3.one;
+
+
+            temp.Create(o.transform.position, o.transform.localScale);
+            if (room.contains(temp) && canHaveItemsBuiltOn(temp))
+            {
+                r.material = selectionWorkMaterial;
+            }
+            else
+            {
+                valid = false;
+                r.material = selectionFailMaterial;
+            }
+            r.material.mainTextureScale = Vector2.one;
+        }
+    }
+
+    public void setupSelectionTileForBuildingARoom()
+    {
+        //Debug.Log(rect.ToString());
+
+
+        //DRectangle floorRect = rect.collapse(1, 1);
+        if (rect.width < 5 || rect.height < 5 || data.dTileMap.collides(rect) || !canHaveRoomBuiltOn(rect))
+        {
+            valid = false;
+        }
+        else {
+            valid = true;
+        }
+
+
+
+        // Render the position
+        for (int i = 0; i < rend.Count; i++)
+        {
+            Renderer r = rend[i];
+            Debug.Log("Objects " + i + "/" + tilesSelectionObjects.Count);
+            Debug.Log("Rend " + i + "/" + rend.Count);
+            if (valid)
+            {
+                r.material = selectionWorkMaterial;
+            }
+            else
+            {
+                r.material = selectionFailMaterial;
+            }
+            r.material.mainTextureScale = new Vector2(rect.width, rect.height);
+            tilesSelectionObjects[i].transform.localPosition = Vector3.zero;
+            tilesSelectionObjects[i].transform.localScale = rect.size;
+            Debug.Log("Position " + tilesSelectionObjects[i].transform.localPosition);
+
+        }
+    }
+
+    private void buildGraphics()
+    {
+        int tileRequirements = 0;
+        if (builderStage == BuildableRoom.STAGE_ITEMS)
+        {
+            BuildableRoom room = (BuildableRoom)builder;
+            List<Vector2> tiles = room.getCurrentBuildingItem().getTiles();
+            tileRequirements = tiles.Count;
+        }
+        else
+        {
+
+            tileRequirements = 1;
+        }
+
+        // Add extra tiles
+        while (rend.Count < tileRequirements)
+        {
+            GameObject o = Instantiate(tileObject);
+            o.transform.parent = gameObject.transform;
+            o.transform.localPosition = Vector3.zero;
+
+            GameObject child = o.transform.gameObject;
+            tilesSelectionObjects.Add(child);
+
+
+            Renderer r = child.transform.GetChild(0).GetComponent<Renderer>();
+            rend.Add(r);
+        }
+
+        // Remove unneeded tiles
+        while (rend.Count > tileRequirements)
+        {
+            Debug.Log("Removing one with size " + rend.Count + " children: " + transform.childCount);
+            GameObject o = tilesSelectionObjects[tilesSelectionObjects.Count - 1];
+            tilesSelectionObjects.RemoveAt(tilesSelectionObjects.Count - 1);
+            Destroy(o);
+
+            rend.RemoveAt(rend.Count - 1);
+        }
+        Debug.Log("Final size " + rend.Count);
+
     }
 
     private bool canHaveItemsBuiltOn(DRectangle rect)
@@ -107,6 +189,9 @@ public class SelectionTile : MonoBehaviour {
         {
             for (int y = rect.top; y <= rect.bottom; y++)
             {
+                // False if it's already an item
+                if (data.dTileMap.hasItem(x, y)) return false;
+
                 if (data.dTileMap.isRoom(x, y)) continue;
                 if (data.dTileMap.hasWall(x, y)) continue;
                 return false;
@@ -139,16 +224,12 @@ public class SelectionTile : MonoBehaviour {
         this.builderProperty = b.getProperty();
         doorPositions.Clear();
         windowPositions.Clear();
-        foreach (Transform child in transform)
+
+        if (tilesSelectionObjects.Count > 0)
         {
-            if (child.name != tileObject.name)
-            {
-                Destroy(child.gameObject);
-            }
+            tilesSelectionObjects[0].transform.localScale = Vector3.one;
+            tilesSelectionObjects[0].transform.localPosition = Vector3.zero;
         }
-        tileObject.transform.localScale = defaultTileObjectSize;
-        tileObject.transform.localPosition = defulatTileObjectPosition;
-        transform.localScale = Vector3.one;
     }
 
     public Buildable getBuildable()

@@ -5,10 +5,10 @@ using System;
 [System.Serializable]
 public class DRectangle : ScriptableObject{ 
 
-    public int left;
-    public int top;
-    public int width;
-    public int height;
+    [SerializeField]public int left = 0;
+    [SerializeField]public int top = 0;
+    [SerializeField]public int width = 0;
+    [SerializeField]public int height = 0;
 
     public virtual DRectangle Create(int x, int y, int width, int height)
     {
@@ -17,6 +17,16 @@ public class DRectangle : ScriptableObject{
         this.width = width;
         this.height = height;
         return this;
+    }
+    
+    public DRectangle Create(Vector3 position, Vector3 size)
+    {
+        return Create((int)position.x, (int)position.z, (int)size.x, (int)size.z);
+    }
+
+    public void OnDestroy()
+    {
+        Debug.Log("Destroyed Rectangle");
     }
 
     public int right
@@ -32,6 +42,13 @@ public class DRectangle : ScriptableObject{
     public Vector3 position
     {
         get { return new Vector3(left, 0, top); }
+        set { left = (int)value.x; top = (int)value.z; }
+    }
+
+    public Vector3 size
+    {
+        get { return new Vector3(width, 1, height); }
+        set { width = (int)value.x; height = (int)value.z; }
     }
 
     public bool collidesWith(DRectangle other)
@@ -45,10 +62,10 @@ public class DRectangle : ScriptableObject{
 
     public bool contains(Vector3 other)
     {
-        if (left > other.x   ) return false; //Debug.Log("LEFT");
-        if (top > other.z    ) return false; //Debug.Log("TOP " + right + "," + other.x);
-        if (right < other.x  ) return false; //Debug.Log("Right");
-        if (bottom < other.z ) return false; //Debug.Log("Bottom");
+        if (left > other.x   ) return false;
+        if (top > other.z    ) return false;
+        if (right < other.x  ) return false;
+        if (bottom < other.z ) return false;
         return true;
     }
 

@@ -64,7 +64,7 @@ public class SelectionTileUI : MonoBehaviour {
         {
             Order o = ai.getCurrentOrder();
             string orderText = o != null ? o.ToString() : "Idle";
-            guestInfo.text += orderText + "\n";
+            guestInfo.text += "\n" + orderText + " " + ai.State;
         }
 
 

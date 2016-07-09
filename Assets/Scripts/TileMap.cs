@@ -36,6 +36,7 @@ public class TileMap : MonoBehaviour
         typeof(BuildableChair),
         typeof(BuildablePainting),
         typeof(ISingleBed), // Clean
+        typeof(ISingleBed), // InUse
         typeof(ISingleBed), // Dirty
         typeof(IDoubleBed), // Clean
         typeof(IDoubleBed), // Dirty
@@ -111,6 +112,8 @@ public class TileMap : MonoBehaviour
 
 
                 //Debug.Log(x + "," + y + "-> " + index + " " + materials[tile]);
+
+                // Wall types
                 if ( map.hasWall(x, y) )
                 {
                     DWall wall = map.getWall(x, y);
@@ -129,13 +132,15 @@ public class TileMap : MonoBehaviour
                     if (window == null) { Debug.LogError("No window at position " + x + "," + y); }
                     buildWindow(window);
                 }
-                else if (map.hasItem(x, y))
+
+                // Items are different to walls
+                if (map.hasItem(x, y))
                 {
                     BuildableItem item = map.getItem(x, y);
                     if (item == null) { Debug.LogError("No item at position " + x + "," + y); }
+                    //Debug.Log("Placed Item at " + x + "," + y);
                     buildItem(item);
                 }
-                //texture.filterMode = FilterMode.Bilinear;
             }
             map.changes.Clear();
         }
@@ -171,6 +176,22 @@ public class TileMap : MonoBehaviour
                 {
                     Transform selectionCube = selectionScript.transform;
 
+
+
+                    Transform bPParent = selectionCube.FindChild("Blueprints");
+                    GameObject o = null;
+                    if (bPParent == null)
+                    {
+                        o = new GameObject();
+                        o.transform.parent = selectionCube;
+                        o.name = "Blueprints";
+                    }
+                    else
+                    {
+                        o = bPParent.gameObject;
+                    }
+
+
                     // If we just changed to this Stage. Build the meshes
                     if (selectionScript.stageModified())
                     {
@@ -186,7 +207,7 @@ public class TileMap : MonoBehaviour
                                 Vector3 newPos = new Vector3(x, 0, y * (selectionScript.rect.height - 1));
                                 GameObject bpWall = (GameObject)Instantiate(blueprintWallPrefab);
                                 bpWall.transform.position = position + newPos;
-                                bpWall.transform.parent = selectionCube;
+                                bpWall.transform.parent = o.transform;
                                 bpWall.name = "BPWall" + newPos.x + "," + newPos.z;
                                 rotateByBounds(bpWall, selectionScript.rect);
                             }
@@ -198,7 +219,7 @@ public class TileMap : MonoBehaviour
                                 Vector3 newPos = new Vector3(x * (selectionScript.rect.width - 1), 0, y);
                                 GameObject bpWall = (GameObject)Instantiate(blueprintWallPrefab);
                                 bpWall.transform.position = position + newPos;
-                                bpWall.transform.parent = selectionCube;
+                                bpWall.transform.parent = o.transform;
                                 bpWall.name = "BPWall" + newPos.x + "," + newPos.z;
                                 rotateByBounds(bpWall, selectionScript.rect);
                             }
@@ -213,7 +234,7 @@ public class TileMap : MonoBehaviour
                                 Vector3 newPos = new Vector3(x * (selectionScript.rect.width - 1), 0, y * (selectionScript.rect.height - 1));
                                 GameObject bpWall = (GameObject)Instantiate(blueprintWallPrefab);
                                 bpWall.transform.position = position + newPos;
-                                bpWall.transform.parent = selectionCube;
+                                bpWall.transform.parent = o.transform;
                                 bpWall.name = "BPWallCorner" + newPos.x + "," + newPos.z;
                                 if ( y == 1)
                                 {
@@ -247,7 +268,7 @@ public class TileMap : MonoBehaviour
                             // Add the door
                             GameObject bpDoor = (GameObject)Instantiate(blueprintDoorPrefab);
                             bpDoor.transform.position = newPos;
-                            bpDoor.transform.parent = selectionCube;
+                            bpDoor.transform.parent = o.transform;
                             bpDoor.name = "BPDoor" + newPos.x + "," + newPos.z;
                             rotateByBounds(bpDoor, selectionScript.rect);
                         }
@@ -275,7 +296,7 @@ public class TileMap : MonoBehaviour
                             // Add the Window
                             GameObject bpWindow = (GameObject)Instantiate(blueprintWindowPrefab);
                             bpWindow.transform.position = newPos;
-                            bpWindow.transform.parent = selectionCube;
+                            bpWindow.transform.parent = o.transform;
                             bpWindow.name = "BPWindow" + newPos.x + "," + newPos.z;
                             rotateByBounds(bpWindow, selectionScript.rect);
                         }
@@ -286,52 +307,11 @@ public class TileMap : MonoBehaviour
                     if (selectionScript.stageModified())
                     {
                         Transform selectionCube = selectionScript.transform;
-                        while (selectionCube.childCount > 1)
-                        {
-                            Transform child = selectionScript.transform.GetChild(1);
-                            if (child != selectionScript.tileObject)
-                            {
-                                child.parent = null;
-                                Destroy(child.gameObject);
-                            }
-                        }
+                        Destroy(selectionCube.FindChild("Blueprints").gameObject);
                     }
                     else if( selectionScript.placedItemsModified() )
                     {
-                        Transform selectionCube = selectionScript.transform;
 
-                        // Get the position
-                        foreach (BuildableItem position in build.items)
-                        {
-                            Vector3 newPos = new Vector3(position.left, 0, position.top);
-
-                            // Remove anything that was originally there
-                            foreach (Transform child in selectionCube)
-                            {
-                                if (child.name.EndsWith(newPos.x + "," + newPos.z))
-                                {
-                                    Destroy(child.gameObject);
-                                    break;
-                                }
-                            }
-
-                            // Add the door
-                            /*GameObject item = (GameObject)Instantiate(minibarPrefab);
-                            item.transform.position = selectionScript.rect.position;
-                            item.transform.GetChild(0).rotation = position.rotation;
-                            item.name = "BuildableItem" + item.transform.position.x + "," + item.transform.position.z;
-                            //map.AddItem(position);
-
-                            BuildableRoom room = map.getRoom((int)selectionScript.rect.position.x, (int)selectionScript.rect.position.z);
-                            if( room != null)
-                            {
-                                //item.transform.parent = room.transform;
-                            }
-                            else
-                            {
-                                Debug.Log("Doesn't exist " + "Room'" + selectionScript.rect.position.x + "," + selectionScript.rect.position.z + "'");
-                            }*/
-                        }
                     }
                 }
             }
@@ -505,14 +485,12 @@ public class TileMap : MonoBehaviour
         doorObject.transform.position = new Vector3(door.position.x, 0, door.position.y);
 
         door.gameObject = doorObject;
-
-        Debug.Log("Door " + door.facingDirection);
         rotateByObject(door);
     }
 
     private void buildItem(BuildableItem item)
     {
-        Debug.Log("Item " + item.GetType().Name);
+        //Debug.Log("Item " + item.GetType().Name);
         string name = item.GetType().Name + item.position.x + "," + item.position.z;
         GameObject itemObject = GameObject.Find(name);
         int index = 0;
@@ -546,6 +524,13 @@ public class TileMap : MonoBehaviour
                 dirtyObject.transform.GetChild(0).transform.rotation = item.rotation;
                 dirtyObject.SetActive(false);
                 bed.dirtyGameObject = dirtyObject;
+
+                GameObject inUseObject = (GameObject)Instantiate(itemObjects[index + 2]);
+                inUseObject.name = name + "(InUse)";
+                inUseObject.transform.position = new Vector3((int)item.position.x, 0, (int)item.position.z);
+                inUseObject.transform.GetChild(0).transform.rotation = item.rotation;
+                inUseObject.SetActive(false);
+                bed.inUseGameObject = inUseObject;
                 Debug.Log("BuildableBed " + (index + 1));
             }
         }

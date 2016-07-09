@@ -27,6 +27,17 @@ public class GuestAI : AIBase
 
         name = "BasicAI(" + id + ")";
 
+
+        // Random properties
+        property_sleep = UnityEngine.Random.Range(0, 0.5f);
+    }
+
+    void FixedUpdate()
+    {
+        if (State == STATE_WALK)
+        {
+            moveTowardsTarget();
+        }
     }
 
     // Update is called once per frame
@@ -38,27 +49,19 @@ public class GuestAI : AIBase
         {
             idle();
         }
-        else if( State == STATE_WALK )
-        {
-            moveTowardsTarget();
-        }
 	}
 
     private void idle()
     {
         if (orders.Count == 0)
         {
-            if( property_sleep < 1)
-            {
-                // Go to sleep
-                orders.Push(ScriptableObject.CreateInstance<Sleep>());
-                orders.Push(ScriptableObject.CreateInstance<GoToBed>());
-            }
-            else
-            {
-                // We have slept. Go home
-                orders.Push(ScriptableObject.CreateInstance<GoHome>());
-            }
+            // Buy a bed
+            // Go to sleep
+            // Go home
+            orders.Push(ScriptableObject.CreateInstance<GoHome>());
+            orders.Push(ScriptableObject.CreateInstance<GetOutOfBed>());
+            orders.Push(ScriptableObject.CreateInstance<Sleep>());
+            orders.Push(ScriptableObject.CreateInstance<GetInBed>());
         }
         else {
 
@@ -72,6 +75,11 @@ public class GuestAI : AIBase
                 if(completed is GoHome)
                 {
                     Destroy(gameObject);
+                }
+                else if (completed is GetInBed)
+                {
+                    BuildableBed bed = getOwnedBed();
+                    bed.setRoomToInUse();
                 }
                 else if (completed is Sleep)
                 {

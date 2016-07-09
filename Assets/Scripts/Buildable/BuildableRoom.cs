@@ -48,13 +48,13 @@ public abstract class BuildableRoom : Buildable
 
     protected GameData data;
     protected SelectionTile selectionScript;
-    protected GameObject selectionCube;
+    //protected GameObject selectionCube;
 
     private void initialize()
     {
 
         selectionScript = GameObject.FindObjectOfType<SelectionTile>();
-        selectionCube = selectionScript.gameObject;
+        //selectionCube = selectionScript.gameObject;
 
         Stage = STAGE_BLUEPRINT;
         Property = PROPERTY_BP_CREATE;
@@ -70,13 +70,13 @@ public abstract class BuildableRoom : Buildable
         //Debug.Log("Tile " + data.dTileMap.getTile((int)movePosition.x, (int)movePosition.z) + " " + movePosition);
         if (Stage == STAGE_BLUEPRINT && Property == PROPERTY_BP_CREATE)
         {
-            Vector3 cubeSize = new Vector3(Mathf.Floor(selectionCube.transform.localScale.x / 2), 0, Mathf.Floor(selectionCube.transform.localScale.z / 2));
-            selectionCube.transform.position = movePosition - cubeSize;
+            //Vector3 cubeSize = new Vector3(Mathf.Floor(selectionScript.rect.width / 2), 0, Mathf.Floor(selectionScript.rect.height / 2));
+            selectionScript.rect.position = movePosition;// - cubeSize;
         }
         else if (Stage == STAGE_ITEMS)
         {
-            Vector3 cubeSize = new Vector3(Mathf.Floor(selectionCube.transform.localScale.x/2), 0, Mathf.Floor(selectionCube.transform.localScale.z/2));
-            selectionCube.transform.position = movePosition - cubeSize;
+            //Vector3 cubeSize = new Vector3(Mathf.Floor(selectionScript.rect.width/2), 0, Mathf.Floor(selectionScript.rect.height/2));
+            selectionScript.rect.position = movePosition;// - cubeSize;
         }
     }
 
@@ -96,7 +96,7 @@ public abstract class BuildableRoom : Buildable
             {
                 // Clicked inside the rectangle. We can drag it now
                 Property = PROPERTY_BP_MOVE;
-                originalPosition = selectionCube.transform.position;
+                originalPosition = selectionScript.rect.position;
             }
             else {
 
@@ -140,10 +140,8 @@ public abstract class BuildableRoom : Buildable
             // Add Window
             if (canPlaceWindow(releasePosition))
             {
-                Debug.Log("=======Window=======");
                 Vector2 position = new Vector2(Mathf.Ceil(releasePosition.x), Mathf.Ceil(releasePosition.z));
                 DWindow window = DWindow.create(position, getDirection(position));
-                Debug.Log("Dir " + window.facingDirection);
                 windows.Add(window);
             }
         }
@@ -159,8 +157,8 @@ public abstract class BuildableRoom : Buildable
             {
                 // Add Item
                 //BuildableItem clone = (BuildableItem)getPlaceableItems()[currentItemIndex].Clone();
-                editingItem.left = (int)selectionCube.transform.position.x;
-                editingItem.top = (int)selectionCube.transform.position.z;
+                editingItem.left = (int)selectionScript.rect.left-selectionScript.rect.width  / 2;
+                editingItem.top = (int)selectionScript.rect.top - selectionScript.rect.height / 2;
                 addItem(editingItem);
                 data.dTileMap.AddItem(editingItem);
                 editingItem = (BuildableItem)ScriptableObject.CreateInstance(getPlaceableItems()[currentItemIndex].ToString());
@@ -193,7 +191,6 @@ public abstract class BuildableRoom : Buildable
                 items[index].rotation = editingItem.rotation * Quaternion.Euler(0, 90, 0);
                 // Add more changes
                 data.dTileMap.changes.Add(new Vector2(items[index].getOrigin().x, items[index].getOrigin().y));
-                Debug.Log("Rotating BuildingRoom");
             }
         }
         //Debug.Log("Property: " + Property);
@@ -203,15 +200,15 @@ public abstract class BuildableRoom : Buildable
     private Navigation.Direction getDirection(Vector2 worldPosition)
     {
         Vector2 roomPosition = new Vector2(
-            worldPosition.x - selectionCube.transform.position.x,
-            worldPosition.y - selectionCube.transform.position.z
+            worldPosition.x - selectionScript.rect.left,
+            worldPosition.y - selectionScript.rect.top
         );
         
         if (roomPosition.x == 0)
         {
             return Navigation.Direction.West;
         }
-        else if (roomPosition.x == selectionCube.transform.localScale.x-1)
+        else if (roomPosition.x == selectionScript.rect.width-1)
         {
             return Navigation.Direction.East;
         }
@@ -219,20 +216,20 @@ public abstract class BuildableRoom : Buildable
         {
             return Navigation.Direction.South;
         }
-        else if (roomPosition.y == selectionCube.transform.localScale.y-1)
+        else if (roomPosition.y == selectionScript.rect.height-1)
         {
             return Navigation.Direction.North;
         }
 
-        //Debug.Log("Invalid " + roomPosition + " - > " + selectionCube.transform.position + " " + selectionCube.transform.localScale);
+        //Debug.Log("Invalid " + roomPosition + " - > " + selectionScript.rect.position + " " + selectionCube.transform.localScale);
         return Navigation.Direction.North;
     }
 
     private bool canPlaceDoor(Vector3 releasePosition)
     {
-        float width = selectionCube.transform.localScale.x;
-        float height = selectionCube.transform.localScale.z;
-        Vector3 worldPosition = releasePosition - selectionCube.transform.position;
+        float width = selectionScript.rect.width;
+        float height = selectionScript.rect.height;
+        Vector3 worldPosition = releasePosition - selectionScript.rect.position;
 
         // Make sure it's inside rect or not on the walls 
         if (!selectionScript.rect.contains(releasePosition) || selectionScript.rect.collapse(1, 1, 1, 1).contains(releasePosition))
@@ -259,9 +256,9 @@ public abstract class BuildableRoom : Buildable
 
     private bool canPlaceWindow(Vector3 releasePosition)
     {
-        float width = selectionCube.transform.localScale.x;
-        float height = selectionCube.transform.localScale.z;
-        Vector3 worldPosition = releasePosition - selectionCube.transform.position;
+        float width = selectionScript.rect.width;
+        float height = selectionScript.rect.height;
+        Vector3 worldPosition = releasePosition - selectionScript.rect.position;
 
         // Make sure it's inside rect or not on the walls 
         if( !selectionScript.rect.contains(releasePosition) || selectionScript.rect.collapse(1,1,1,1).contains(releasePosition))
@@ -317,8 +314,8 @@ public abstract class BuildableRoom : Buildable
         if (Stage == STAGE_BLUEPRINT && Property == PROPERTY_BP_CREATE)
         {
             // Move cube to the right space and scale it
-            selectionCube.transform.position = new Vector3(left, 0, bottom);
-            selectionCube.transform.localScale = new Vector3(width, 1, height);
+            selectionScript.rect.position = new Vector3(left, 0, bottom);
+            selectionScript.rect.size = new Vector3(width, 1, height);
         }
         else if (Stage == STAGE_BLUEPRINT && Property == PROPERTY_BP_RESIZE)
         {
@@ -327,9 +324,9 @@ public abstract class BuildableRoom : Buildable
         else if (Stage == STAGE_BLUEPRINT && Property == PROPERTY_BP_MOVE)
         {
             // We are moving this rectangle
-            selectionCube.transform.position = originalPosition + change;
-            //this.top = (int)(selectionCube.transform.position.z-height);
-            //this.left = (int)selectionCube.transform.position.x;
+            selectionScript.rect.position = originalPosition + change;
+            //this.top = (int)(selectionScript.rect.top-height);
+            //this.left = (int)selectionScript.rect.left;
         }
     }
 
@@ -344,10 +341,10 @@ public abstract class BuildableRoom : Buildable
         {
             if (canBeBuilt())
             {
-                this.width = (int)selectionCube.transform.localScale.x;
-                this.height = (int)selectionCube.transform.localScale.z;
-                this.left = (int)selectionCube.transform.position.x;
-                this.top = (int)selectionCube.transform.position.z;
+                this.width = (int)selectionScript.rect.width;
+                this.height = (int)selectionScript.rect.height;
+                this.left = (int)selectionScript.rect.left;
+                this.top = (int)selectionScript.rect.top;
 
                 data.dTileMap.ApplyToTileMap(this);
 
@@ -359,9 +356,9 @@ public abstract class BuildableRoom : Buildable
                 editingItem.Create(0, 0);
                 //Debug.Log("Eiditing " + editingItem);
 
-                selectionCube.transform.GetChild(0).localScale = new Vector3(1, 0.2f, 1);
-                selectionCube.transform.GetChild(0).localPosition = new Vector3(0.5f, 0.125f, 0.5f);
-                selectionCube.transform.localScale = new Vector3(1, 1, 1);
+                //selectionCube.transform.GetChild(0).localScale = new Vector3(1, 0.2f, 1);
+                //selectionCube.transform.GetChild(0).localPosition = new Vector3(0.5f, 0.125f, 0.5f);
+                //selectionCube.transform.localScale = new Vector3(1, 1, 1);
             }
         }
         Debug.Log("Property: " + Property);

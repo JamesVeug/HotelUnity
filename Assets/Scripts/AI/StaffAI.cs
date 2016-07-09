@@ -19,13 +19,7 @@ public class StaffAI : AIBase
         data = GameObject.FindObjectOfType<GameData>();
         nav = data.navigation;
 
-        // Randomize color
-        GameObject mesh = transform.FindChild("Body").gameObject;
-
-        Renderer rend = mesh.GetComponent<Renderer>();
-        rend.material.color = new Color(UnityEngine.Random.Range(0f, 1f), UnityEngine.Random.Range(0f, 1f), UnityEngine.Random.Range(0f, 1f));
         id = NEXT_ID++;
-
         name = "BasicAI(" + id + ")";
 
     }

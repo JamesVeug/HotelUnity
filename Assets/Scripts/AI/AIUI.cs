@@ -3,6 +3,9 @@ using System.Collections;
 
 [RequireComponent(typeof(GuestAI))]
 public class AIUI : MonoBehaviour {
+    private float lastTick;
+
+    public float sleepDelay = 1f;
     public GameObject sleepPrefab;
 
     private GuestAI ai;
@@ -22,10 +25,11 @@ public class AIUI : MonoBehaviour {
 
         if( order is Sleep)
         {
-            if( sleepPrefab != null)
+            if( sleepPrefab != null && (lastTick+sleepDelay) < Time.time )
             {
                 GameObject o = GameObject.Instantiate(sleepPrefab);
-                o.transform.position = transform.position + new Vector3(0,2.5f,0);
+                o.transform.position = transform.position + new Vector3(0,1,1);
+                lastTick = Time.time;
             }
         }
 	}

@@ -33,7 +33,7 @@ public class TileMapMouse : MonoBehaviour {
 
         new List<Type>
         {
-            typeof(StaffAI)
+            typeof(BuildableStaff)
         },
     };
 
@@ -104,7 +104,7 @@ public class TileMapMouse : MonoBehaviour {
 
         if( Input.GetButtonDown("Submit"))
         {
-            Debug.Log("Submit");
+            //Debug.Log("Submit");
             if( !whatToBuild.hasNextStage())
             {
                 if (whatToBuild is BuildableRoom)
@@ -113,14 +113,14 @@ public class TileMapMouse : MonoBehaviour {
                     data.dTileMap.RecordRoom();
                 }
                 whatToBuild = (Buildable)ScriptableObject.CreateInstance(buildableTypes[currentTypeIndex][currentValueIndex].ToString());
-                Debug.Log(whatToBuild);
+                //Debug.Log(whatToBuild);
                 selectionScript.setBuilder(whatToBuild);
             }
             whatToBuild.applyStage();
         }
         else if (Input.GetButtonDown("Cancel"))
         {
-            Debug.Log("Cancel");
+            //Debug.Log("Cancel");
             whatToBuild = (Buildable)ScriptableObject.CreateInstance(buildableTypes[currentTypeIndex][currentValueIndex].ToString());
             selectionScript.setBuilder(whatToBuild);
         }

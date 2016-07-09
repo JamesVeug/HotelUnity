@@ -102,12 +102,24 @@ public class Navigation : ScriptableObject{
     public List<Vector3> getPathToItem(Vector3 currentPosition, Vector3 itemPosition)
     {
         // Get closest point to item according to where they currently are
-        
-        return getPath(currentPosition, itemPosition,1);
+        List<Vector3> exceptions = new List<Vector3>();
+        exceptions.Add(itemPosition);
+
+        return getPath(currentPosition, itemPosition, exceptions);
     }
 
-    public List<Vector3> getPath(Vector3 start, Vector3 end, int tileFreedom)
+    public List<Vector3> getPath(Vector3 start, Vector3 end, List<Vector3> exceptions)
     {
+        List<Vector2> tileExceptions = new List<Vector2>();
+        if( exceptions != null)
+        {
+            for(int i = 0; i < exceptions.Count; i++)
+            {
+                Vector2 pos = new Vector2((int)(exceptions[0].x / data.graphicsMap.tileSize), (int)(exceptions[0].z / data.graphicsMap.tileSize));
+                tileExceptions.Add(pos);
+            }
+        }
+
         Vector2 endTile = new Vector2((int)(start.x/data.graphicsMap.tileSize),(int)(start.z / data.graphicsMap.tileSize));
         Vector2 startTile = new Vector2((int)(end.x / data.graphicsMap.tileSize), (int)(end.z / data.graphicsMap.tileSize));
 
@@ -138,7 +150,7 @@ public class Navigation : ScriptableObject{
             }
 
             // Found target
-            if (star.heuristic <= 1)
+            if (star.heuristic <= 0)
             {
                 foundPath = true;
                 break;
@@ -161,7 +173,7 @@ public class Navigation : ScriptableObject{
             // Horizontal
             //Debug.Log("Right");
             Vector2 rightPosition = new Vector2(node.x + 1, node.y);
-            if (node.x + 1 < data.dTileMap.width && canBeWalkedOn3(rightPosition, node, Direction.East))
+            if (node.x + 1 < data.dTileMap.width && canBeWalkedOn3(rightPosition, node, Direction.East, tileExceptions))
             {
                 addNode(fringe, star, rightPosition, endTile);
             }
@@ -170,7 +182,7 @@ public class Navigation : ScriptableObject{
 
             //Debug.Log("Left");
             Vector2 leftPosition = new Vector2(node.x - 1, node.y);
-            if (node.x > 0 && (canBeWalkedOn3(leftPosition, node, Direction.West)) )
+            if (node.x > 0 && (canBeWalkedOn3(leftPosition, node, Direction.West, tileExceptions)) )
             {
                 addNode(fringe, star, leftPosition, endTile);
             }
@@ -180,7 +192,7 @@ public class Navigation : ScriptableObject{
             //Vertical
             //Debug.Log("Up");
             Vector2 upPosition = new Vector2(node.x, node.y+1);
-            if (node.y + 1 < data.dTileMap.height && (canBeWalkedOn3(upPosition, node, Direction.North)))
+            if (node.y + 1 < data.dTileMap.height && (canBeWalkedOn3(upPosition, node, Direction.North, tileExceptions)))
             {
                 addNode(fringe, star, upPosition, endTile);
             }
@@ -189,7 +201,7 @@ public class Navigation : ScriptableObject{
 
             //Debug.Log("Down");
             Vector2 downPosition = new Vector2(node.x, node.y-1);
-            if (node.y > 0 && (canBeWalkedOn3(downPosition, node, Direction.South)))
+            if (node.y > 0 && (canBeWalkedOn3(downPosition, node, Direction.South, tileExceptions)))
             {
                 addNode(fringe, star, downPosition, endTile);
             }
@@ -222,23 +234,32 @@ public class Navigation : ScriptableObject{
                 Debug.DrawLine(new Vector3(it.current.x, 0.5f, it.current.y), new Vector3(it.last.current.x, 0.5f, it.last.current.y), Color.green, 1);
             }
 
-            Vector2 offsetedPosition = it.current + offset;
-            Vector3 position = new Vector3(offsetedPosition.x, start.y, offsetedPosition.y);
-            nodes.Add(position);
+            if (!tileExceptions.Contains(it.current))
+            {
+                Vector2 offsetedPosition = it.current + offset;
+                Vector3 position = new Vector3(offsetedPosition.x, start.y, offsetedPosition.y);
+                nodes.Add(position);
+            }
+            else
+            {
+                //Debug.Log("Found exception that isn't added to Path: " + it.current);
+            }
             it = it.last;
         }
         
         return nodes;
     }
 
-    public bool canBeWalkedOn3(Vector2 to, Vector2 from, Direction dir)
+    public bool canBeWalkedOn3(Vector2 to, Vector2 from, Direction dir, List<Vector2> exceptions)
     {
         DTileMap map = data.dTileMap;
         DTile toTile = map.getTile((int)to.x, (int)to.y);
         DTile fromTile = map.getTile((int)from.x, (int)from.y);
 
+        //Debug.Log("Tiles + " + from + "->" + to + " " + dir + " " + toTile.northHasWall());
+
         // Types of tiles
-        if (toTile.hasItem()) return false;
+        if (toTile.hasItem() && !exceptions.Contains(to)) return false;
         if (toTile.isGrass()) return false;
 
         // Walls
@@ -253,6 +274,7 @@ public class Navigation : ScriptableObject{
         if (dir == Direction.West && (toTile.eastHasWindow() || fromTile.westHasWindow())) return false;
         if (dir == Direction.South && (toTile.northHasWindow() || fromTile.southHasWindow())) return false;
 
+        toTile.drawDebugTile(to, 1, Color.green, 2);
         return true;
     }
 

@@ -7,17 +7,10 @@ public class AI_Bubble : MonoBehaviour {
 
     private float currentLife = 0;
     private float MoveSpeed = 1f;
-    private float frequency = 5.0f;  // Speed of sine movement
-    private float magnitude = 0.2f;   // Size of sine movement
-    private Vector3 axis;
-
-    private Vector3 pos;
 
     // Use this for initialization
     void Start () {
         transform.rotation = Camera.main.transform.rotation;
-        pos = transform.position;
-        axis = transform.right;
     }
 	
 	// Update is called once per frame
@@ -30,8 +23,12 @@ public class AI_Bubble : MonoBehaviour {
 
         currentLife += Time.deltaTime;
 
-        pos += transform.up * Time.deltaTime * MoveSpeed;
-        transform.position = pos + axis * Mathf.Sin(Time.time * frequency) * magnitude;
+        transform.position = transform.position + transform.up * Time.deltaTime * MoveSpeed;
+
+        // Make it smaller as its life extends
+        float scale = 1-(currentLife / maxLife);
+        transform.localScale = new Vector3(scale, scale, scale);
+
 
     }
 }

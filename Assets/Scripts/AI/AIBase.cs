@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
+using System;
 
 public abstract class AIBase : MonoBehaviour
 {
@@ -28,19 +29,30 @@ public abstract class AIBase : MonoBehaviour
 
     protected int bedIndex = 0;
     protected int bedSideIndex = 0;
+
     protected BBedroom ownedRoom = null;
     protected BuildableRoom currentRoom = null;
+    public Interactable currentInteraction;
 
     // Properties
     public float property_sleep = 0;
 
+
+    public void walkToItem(Vector3 pos)
+    {
+        //Debug.Log("Door position " + pos);
+        targetPosition = pos;
+        State = STATE_WALK;
+        path = nav.getPathToItem(transform.position, targetPosition);
+        pathIndex = 0;
+    }
 
     public void walkToPosition(Vector3 pos)
     {
         //Debug.Log("Door position " + pos);
         targetPosition = pos;
         State = STATE_WALK;
-        path = nav.getPath(transform.position, targetPosition, 0);
+        path = nav.getPath(transform.position, targetPosition, null);
         pathIndex = 0;
     }
 
@@ -121,6 +133,14 @@ public abstract class AIBase : MonoBehaviour
         return (worldTilePosition - worldPosition).magnitude <= tileMinDistance;
     }
 
+
+
+    public bool isByTile(Vector2 position)
+    {
+        Vector3 worldTilePosition = new Vector3(position.x, 0, position.y);
+        Vector3 worldPosition = new Vector3(transform.position.x - data.graphicsMap.tileSize / 2, 0, transform.position.z - data.graphicsMap.tileSize / 2);
+        return (worldTilePosition - worldPosition).magnitude <= 2;
+    }
 
     public BuildableBed getOwnedBed()
     {

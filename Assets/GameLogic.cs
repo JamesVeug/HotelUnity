@@ -6,11 +6,13 @@ using System;
 public class GameLogic : MonoBehaviour {
 
     public float aiSpawnFrequency = 1;
+    public StaffAI staffAI;
     public GuestAI AIToSpawn;
 
     private bool initialized;
     private float spawnTime;
-    
+
+    private List<StaffAI> spawnedStaffAI = new List<StaffAI>();
     private List<GuestAI> spawnedAI = new List<GuestAI>();
 
     private GameData data;
@@ -31,7 +33,7 @@ public class GameLogic : MonoBehaviour {
         }
         
 
-        if( spawnTime < Time.time)
+        if( (spawnTime+aiSpawnFrequency) < Time.time)
         {
 
             int spawnIndex = UnityEngine.Random.Range(0,data.navigation.AISpawnLocations.Count);
@@ -43,8 +45,17 @@ public class GameLogic : MonoBehaviour {
             //ai.targetPosition = new Vector3(target.x, 0, target.y);
 
             spawnedAI.Add(ai);
-            spawnTime = Time.time + aiSpawnFrequency;
+            spawnTime = Time.time;
         }
+    }
+
+    public void addHouseKeeper(Vector3 position)
+    {
+        StaffAI ai = Instantiate(staffAI);
+        ai.transform.position = new Vector3(position.x, 0, position.y);
+        //ai.targetPosition = new Vector3(target.x, 0, target.y);
+
+        spawnedStaffAI.Add(ai);
     }
 
     public void initialize()
@@ -77,7 +88,7 @@ public class GameLogic : MonoBehaviour {
         data.navigation.AISpawnLocations.Add(new Vector2(tilemapWidth - 1 + hts, tilemapHeight + hts - 1));
         data.navigation.AISpawnLocations.Add(new Vector2(tilemapWidth - 2 + hts, tilemapHeight + hts - 1));
 
-        Debug.Log("Initialized");
+        //Debug.Log("Initialized");
         initialized = true;
     }
 

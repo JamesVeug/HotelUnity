@@ -36,6 +36,7 @@ public class ISingleBed : BuildableBed{
         if (angle == 270 && bedSideIndex == 0) { return new Vector2(-1 + left, 0 + top); }
         else
         {
+            Debug.LogError("Unknown bedside " + bedSideIndex + " angle " + angle);
             return Vector2.zero;
         }
     }

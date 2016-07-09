@@ -198,4 +198,46 @@ public class DTile : ScriptableObject
     {
         return item;
     }
+
+    public void drawDebugTile(Vector2 position, float size, Color color, float time)
+    {
+        Vector3 pos = new Vector3(position.x, 0, position.y);
+
+        Vector3 topleft = pos + new Vector3(0,0,size);
+        Vector3 topright = pos + new Vector3(size, 0, size);
+        Vector3 bottomright = pos + new Vector3(size, 0, 0);
+        Vector3 bottomleft = pos;
+
+        // Outline
+        Debug.DrawLine(bottomleft, bottomright, color, time);
+        Debug.DrawLine(bottomright, topright, color, time);
+        Debug.DrawLine(topright, topleft, color, time);
+        Debug.DrawLine(topleft, bottomleft, color, time);
+
+        // Cross
+        Debug.DrawLine(bottomleft, topright, color, time);
+        Debug.DrawLine(topleft, bottomright, color, time);
+
+        // Walls
+        if (northHasWall() || northHasWindow()) drawDebugWall(topleft,topright,size,color,time);
+        if (eastHasWall() || eastHasWindow())   drawDebugWall(bottomright, topright, size, color, time);
+        if (westHasWall() || westHasWindow())   drawDebugWall(topleft, bottomleft, size, color, time);
+        if (southHasWall() || southHasWindow()) drawDebugWall(bottomright, bottomleft, size, color, time);
+    }
+
+    private void drawDebugWall(Vector3 position1, Vector3 position2, float size, Color color, float time)
+    {
+        Vector3 heightOffset = new Vector3(0, 3, 0);
+        Vector3 upperLeft = position1 + heightOffset;
+        Vector3 upperRight = position2 + heightOffset;
+
+        // Outline
+        Debug.DrawLine(position1, upperLeft, color, time);
+        Debug.DrawLine(position2, upperRight, color, time);
+        Debug.DrawLine(upperLeft, upperRight, color, time);
+
+        // Cross
+        Debug.DrawLine(upperRight, position1, color, time);
+        Debug.DrawLine(upperLeft, position2, color, time);
+    }
 }

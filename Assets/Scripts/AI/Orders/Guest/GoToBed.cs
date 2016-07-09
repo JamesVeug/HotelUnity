@@ -22,13 +22,14 @@ public class GoToBed : Order
         // Walk to bed
         Vector3 bedPosition = nav.getBedPosition(ai);
         Vector2 bedTile = new Vector2(bedPosition.x, bedPosition.z);
-        if( (!ai.isAtTile(bedTile)) )
+        if( (!ai.isByTile(bedTile)) )
         {
-            ai.walkToPosition(bedPosition);
+            ai.walkToItem(bedPosition);
             return false;
         }
 
         // We are at beds position
+        ai.currentInteraction = ai.getOwnedBed();
         return true;
     }
 
