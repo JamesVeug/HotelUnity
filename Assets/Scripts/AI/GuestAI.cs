@@ -6,7 +6,12 @@ using UnityEngine.UI;
 
 public class GuestAI : AIBase
 {
-
+    public Sprite SleepyFace;
+    public Sprite SleepingFace;
+    public Sprite HappyFace;
+    public Sprite AngryFace;
+    public GameObject face;
+    public SpriteRenderer faceRenderer;
 
     void Awake()
     {
@@ -28,12 +33,15 @@ public class GuestAI : AIBase
         name = "BasicAI(" + id + ")";
 
 
+        // Face
+        faceRenderer = face.GetComponent<SpriteRenderer>();
+
         // Random properties
         property_sleep = UnityEngine.Random.Range(0, 0.5f);
     }
 
     // Update is called once per frame
-    void Update()
+    public void Update()
     {
         if (State == STATE_WALK)
         {
@@ -41,11 +49,17 @@ public class GuestAI : AIBase
         }
         else if (State == STATE_IDLE)
         {
-            idle();
+            getNextOrder();
         }
+        else if (State == STATE_SLEEPING)
+        {
+            getNextOrder();
+        }
+
+        assignFace();
     }
 
-    private void idle()
+    private void getNextOrder()
     {
         if (orders.Count == 0)
         {
@@ -84,9 +98,30 @@ public class GuestAI : AIBase
 					// Get angry and go home
 					orders.Clear();
 					orders.Push (ScriptableObject.CreateInstance<GoHome>());
+                    property_anger = 1;
 				}
 
 			}
+        }
+    }
+
+    private void assignFace()
+    {
+        if( State == STATE_SLEEPING)
+        {
+            faceRenderer.sprite = SleepingFace;
+        }
+        else if (property_anger == 1)
+        {
+            faceRenderer.sprite = AngryFace;
+        }
+        else if( property_sleep < 1)
+        {
+            faceRenderer.sprite = SleepyFace;
+        }
+        else
+        {
+            faceRenderer.sprite = HappyFace;
         }
     }
 

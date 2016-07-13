@@ -10,10 +10,12 @@ public class Sleep : Order
         {
             // Go to sleep
             ai.property_sleep = Mathf.Min(1,ai.property_sleep+Time.deltaTime);
+            ai.State = ai.STATE_SLEEPING;
 			return RETURN_TYPE.PROBLEM;
         }
 
         // Wake up
-		return RETURN_TYPE.COMPLETED;
+        ai.State = ai.STATE_IDLE;
+        return RETURN_TYPE.COMPLETED;
     }
 }

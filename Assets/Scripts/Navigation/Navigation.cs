@@ -250,6 +250,32 @@ public class Navigation : ScriptableObject{
         return nodes;
     }
 
+    public bool blockedByDoor(Vector3 from, Vector3 to)
+    {
+        //Debug.Log("BlockedByDoor " + from + "->" + to);
+        DTileMap map = data.dTileMap;
+        DTile toTile = map.getTile((int)to.x, (int)to.z);
+        DTile fromTile = map.getTile((int)from.x, (int)from.z);
+
+        Direction dir = Direction.North;
+        if ((int)from.x > (int)to.x){ dir = Direction.East; }
+        if ((int)from.x < (int)to.x){ dir = Direction.West; }
+        if ((int)from.z > (int)to.z){ dir = Direction.South; }
+        //Debug.Log("Dir " + dir);
+
+        //Debug.Log("North");
+        if (dir == Direction.North && (toTile.southHasDoor() || fromTile.northHasDoor())) return true;
+        //Debug.Log("East");
+        if (dir == Direction.West && (toTile.westHasDoor() || fromTile.eastHasDoor())) return true;
+        //Debug.Log("West");
+        if (dir == Direction.East && (toTile.eastHasDoor() || fromTile.westHasDoor())) return true;
+        //Debug.Log("South");
+        if (dir == Direction.South && (toTile.northHasDoor() || fromTile.southHasDoor())) return true;
+
+        //Debug.Log("Failed");
+        return false;
+    }
+
     public bool canBeWalkedOn3(Vector2 to, Vector2 from, Direction dir, List<Vector2> exceptions)
     {
         DTileMap map = data.dTileMap;

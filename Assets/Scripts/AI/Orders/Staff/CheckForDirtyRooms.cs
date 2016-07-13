@@ -9,12 +9,6 @@ public class CheckForDirtyRooms : Order {
         if (!(ai.getCurrentRoom() is BHouseKeepingRoom))
         {
             ai.addOrder(ScriptableObject.CreateInstance<GoToHouseKeeping>());
-            if(ai.getCurrentRoom() != null )
-                Debug.Log("In " + ai.getCurrentRoom().GetType().Name);
-            else
-            {
-                Debug.Log("Null room");
-            }
             return RETURN_TYPE.PROBLEM;
         }
 

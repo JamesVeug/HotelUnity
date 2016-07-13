@@ -439,6 +439,8 @@ public abstract class BuildableRoom : Buildable
                 return door;
             }
         }
+
+        Debug.Log("Unknown Door at " + x + " " + y);
         return null;
     }
 

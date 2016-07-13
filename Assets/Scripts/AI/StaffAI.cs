@@ -21,12 +21,12 @@ public class StaffAI : AIBase
         nav = data.navigation;
 
         id = NEXT_ID++;
-        name = "BasicAI(" + id + ")";
+        name = "StaffAI(" + id + ")";
 
     }
 
     // Update is called once per frame
-    void Update()
+    public void Update()
     {
 
 

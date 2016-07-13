@@ -6,11 +6,11 @@ using System;
 public abstract class AIBase : MonoBehaviour
 {
     public static int NEXT_ID = 0;
-    protected int id = 0;
+    public int id = 0;
 
     public int STATE_IDLE = 0;
     public int STATE_WALK = 1;
-    //public int STATE_SLEEP = 2;
+    public int STATE_SLEEPING = 2;
 
     public float tileMinDistance = 0.1f;
     public float walkSpeed = 0.1f;
@@ -36,6 +36,7 @@ public abstract class AIBase : MonoBehaviour
 
     // Properties
     public float property_sleep = 0;
+    public float property_anger = 0;
 
 
     public void walkToItem(Vector3 pos)
@@ -155,8 +156,7 @@ public abstract class AIBase : MonoBehaviour
         {
             return null;
         }
-
-        Debug.Log("Index " + getBedIndex());
+        
         return room.getBed(getBedIndex());
     }
 
@@ -194,12 +194,56 @@ public abstract class AIBase : MonoBehaviour
             currentRoom = nav.getCurrentRoom(this);
 
             pathIndex++;
+
+
             if (pathIndex >= path.Count)
             {
                 targetPosition = Vector3.zero;
                 State = STATE_IDLE;
                 return;
             }
+
+            // Next point is valid
+
+            //Debug.Log("New Point " + path[pathIndex]);
+
+            if ((path[pathIndex]-new Vector3(7.5f, 0.0f, 22.5f)).magnitude < 0.1f)
+            {
+                Debug.Log("========= North Door");
+            }
+
+            if ( blockedByDoor(path[pathIndex-1], path[pathIndex]) )
+            {
+                //Debug.Log("Blocked");
+
+                // We can't move as we need to open the door
+                DDoor door = data.dTileMap.getDoor((int)path[pathIndex].x, (int)path[pathIndex].z);
+                if (door == null)
+                {
+                    door = data.dTileMap.getDoor((int)path[pathIndex - 1].x, (int)path[pathIndex - 1].z);
+                }
+
+                // Check we still don't have a door
+                if (door == null)
+                {
+                    //Debug.Log("Can't find door at " + path[pathIndex] + " or " + path[pathIndex-1]);
+                }
+                else {
+                    //Debug.Log("Door exists");
+                    // Open the door
+                    addOrder(ScriptableObject.CreateInstance<OpenDoor>().setDoor(door));
+                    State = STATE_IDLE;
+                    return;
+                }
+            }
+            else if (currentInteraction is DDoor)
+            {
+                // Close the door as we are on a new tile
+                addOrder(ScriptableObject.CreateInstance<CloseDoor>());
+                State = STATE_IDLE;
+                return;
+            }
+
         }
 
         // Moving to next point
@@ -207,5 +251,11 @@ public abstract class AIBase : MonoBehaviour
         transform.LookAt(newPosition);
 
         transform.position = newPosition;
+    }
+
+    private bool blockedByDoor(Vector3 current, Vector3 next)
+    {
+        // While walking to the target, we need to check that the next tile doesn't contain a door
+        return nav.blockedByDoor(current, next);
     }
 }

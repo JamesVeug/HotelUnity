@@ -42,7 +42,7 @@ public class DTileMap : MonoBehaviour{
             for (int j = 0; j < height; j++)
             {
                 tiles[j * width + i] = DTile.GRASS();
-                changes.Add(new Vector2(i, j));
+                addChange(new Vector2(i, j));
             }
         }
 
@@ -105,7 +105,15 @@ public class DTileMap : MonoBehaviour{
         if (tiles[j * width + i].tileType != type)
         {
             tiles[j * width + i].tileType = type;
-            changes.Add(new Vector2(i, j));
+            addChange(new Vector2(i, j));
+        }
+    }
+
+    public void addChange(Vector2 v)
+    {
+        if( !changes.Contains(v))
+        {
+            changes.Add(v);
         }
     }
 
@@ -162,6 +170,7 @@ public class DTileMap : MonoBehaviour{
         BuildableRoom room = getRoom(x, y);
         if (room == null)
         {
+            Debug.Log("Room doesn't exist " + x + "," + y);
             return null;
         }
 
@@ -235,7 +244,7 @@ public class DTileMap : MonoBehaviour{
         var requiredTiles = item.getItemTiles();
         foreach(Vector2 tile in requiredTiles) {
             tiles[(int)(tile.y * width + tile.x)].item = true;
-            changes.Add(new Vector2((int)tile.x, (int)tile.y));
+            addChange(new Vector2((int)tile.x, (int)tile.y));
         }
     }
 
@@ -245,7 +254,7 @@ public class DTileMap : MonoBehaviour{
         foreach (Vector2 tile in requiredTiles)
         {
             tiles[(int)(tile.y * width + tile.x)].item = false;
-            changes.Add(new Vector2((int)tile.x, (int)tile.y));
+            addChange(new Vector2((int)tile.x, (int)tile.y));
         }
     }
 
@@ -274,12 +283,12 @@ public class DTileMap : MonoBehaviour{
                 {
                     //Debug.Log("PlacedDoor"+x + "," + y);
 
-                    Navigation.Direction dir = Navigation.Direction.North;
-                    if (isNorth) { tiles[y * width + x].setNorthDoor(); dir = Navigation.Direction.North; }
-                    if (isSouth) { tiles[y * width + x].setSouthDoor(); dir = Navigation.Direction.South; }
-                    if (isWest) { tiles[y * width + x].setWestDoor(); dir = Navigation.Direction.West; }
-                    if (isEast) { tiles[y * width + x].setEastDoor(); dir = Navigation.Direction.East; }
-                    door.facingDirection = dir;
+                    Navigation.Direction dir = door.facingDirection;
+                    if (dir == Navigation.Direction.North) { tiles[y * width + x].setNorthDoor(); }
+                    if (dir == Navigation.Direction.South) { tiles[y * width + x].setSouthDoor(); }
+                    if (dir == Navigation.Direction.West) { tiles[y * width + x].setWestDoor(); }
+                    if (dir == Navigation.Direction.East) { tiles[y * width + x].setEastDoor(); }
+                    //door.facingDirection = dir;
                 }
                 else if (window != null)
                 {
@@ -306,7 +315,7 @@ public class DTileMap : MonoBehaviour{
                 }
 
                 tiles[y * width + x].setRoom();
-                changes.Add(new Vector2(x, y));
+                addChange(new Vector2(x, y));
             }
         }
     }

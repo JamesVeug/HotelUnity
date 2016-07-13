@@ -7,8 +7,8 @@ public abstract class BuildableItem : Buildable, ICloneable, IEquatable<Buildabl
 {
     public Quaternion rotation = Quaternion.identity;
     protected Vector2 origin;
-    protected List<Vector2> tiles = new List<Vector2>();
-    protected List<Vector2> itemTiles = new List<Vector2>();
+    protected List<Vector2> tiles = new List<Vector2>(); // All tiles related to the Object
+    protected List<Vector2> itemTiles = new List<Vector2>(); // Tiles for the floor
     public GameObject gameObject;
 
     public abstract DRectangle Create(int x, int y);

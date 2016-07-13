@@ -42,7 +42,7 @@ public class CleanRoom : Order {
                 BuildableBed bed = staff.dirtyRoom.getBed(i);
                 if (bed.isDirty && !bed.isSoldToGuest())
                 {
-                    Debug.Log("Dirty Bed " + i);
+                    //Debug.Log("Dirty Bed " + i);
                     dirtyBeds.Add(i);
                 }
             }

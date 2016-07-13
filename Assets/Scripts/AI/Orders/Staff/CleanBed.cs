@@ -17,13 +17,19 @@ public class CleanBed : Order {
             return RETURN_TYPE.PROBLEM;
         }
 
+        // Make sure it's still dirty
+        if( !staff.dirtyBed.isDirty )
+        {
+            return RETURN_TYPE.COMPLETED;
+        }
+
         // Face Bed
         Quaternion currentRotation = staff.transform.rotation;
         float degree = Quaternion.LookRotation((bedPosition- staff.transform.position).normalized).eulerAngles.y;
-        if (currentRotation.eulerAngles.y != degree)
+        if (Mathf.Abs(currentRotation.eulerAngles.y - degree) > 5)
         {
-            staff.transform.rotation = Quaternion.Euler(currentRotation.x,degree, currentRotation.z);
-
+            staff.transform.rotation = Quaternion.Slerp(staff.transform.rotation, Quaternion.Euler(currentRotation.x,degree, currentRotation.z), Time.deltaTime*20f);
+            return RETURN_TYPE.PROBLEM;
         }
 
         // Clean it

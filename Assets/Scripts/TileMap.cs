@@ -478,6 +478,12 @@ public class TileMap : MonoBehaviour
     {
         GameObject doorObject = (GameObject)Instantiate(doorPrefab);
         doorObject.transform.position = new Vector3(door.position.x, 0, door.position.y);
+        //Debug.Log("Create Door at " + door.position);
+
+        GameObject openChild = doorObject.transform.GetChild(0).FindChild("Opened").gameObject;
+        GameObject closedChild = doorObject.transform.GetChild(0).FindChild("Closed").gameObject;
+        door.openObject  = openChild;
+        door.closeObject = closedChild;
 
         door.gameObject = doorObject;
         rotateByObject(door);
