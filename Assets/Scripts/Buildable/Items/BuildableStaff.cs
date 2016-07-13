@@ -28,6 +28,11 @@ public class BuildableStaff : Buildable
         throw new NotImplementedException();
     }
 
+    public override void cancelStage()
+    {
+        throw new NotImplementedException();
+    }
+
     public override bool canBeBuilt()
     {
         return true;
@@ -53,19 +58,22 @@ public class BuildableStaff : Buildable
     }
 
     public override void moveMouse(Vector3 movePosition)
-    {
-        //throw new NotImplementedException();
+	{
+		if (!initialized) initialize();
+		selectionScript.rect.position = movePosition;// - cubeSize;
+		selectionScript.rect.size = new Vector3(1,0,1);
     }
 
-    public override void pressMouse(Vector3 pressPosition)
+    public override void pressMouse(Vector3 pressPosition, MouseButton mouseButton)
     {
         if (!initialized) initialize();
 
-        //throw new NotImplementedException();
-        data.gameLogic.addHouseKeeper(pressPosition);
+		if (selectionScript.isValid ()) {
+			data.gameLogic.addHouseKeeper (pressPosition);
+		}
     }
 
-    public override void releaseMouse(Vector3 pressedPosition, Vector3 releasePosition)
+    public override void releaseMouse(Vector3 pressedPosition, Vector3 releasePosition, MouseButton mouseButton)
     {
         //Debug.Log("Release");
 

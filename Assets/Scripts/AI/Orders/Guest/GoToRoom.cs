@@ -4,17 +4,17 @@ using System.Collections;
 public class GoToRoom : Order {
 
 
-    public override bool executeOrder(AIBase ai, Navigation nav)
+	public override RETURN_TYPE executeOrder(AIBase ai, Navigation nav)
     {
         if (ai.getCurrentRoom() != ai.getOwnedRoom() )
         {
 
             Vector3 pos = nav.getClosestDoorPosition(ai, ai.getOwnedRoom());
             ai.walkToPosition(pos);
-            return false;
+			return RETURN_TYPE.PROBLEM;
         }
 
         // Should be in reception now
-        return true;
+		return RETURN_TYPE.COMPLETED;
     }
 }

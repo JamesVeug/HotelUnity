@@ -77,4 +77,9 @@ public abstract class BuildableBed : BuildableItem, Interactable{
         interactor.transform.position = savedInteractionPosition[index];
         interactor.transform.localRotation = savedInteractionRotation[index];
     }
+
+    public override void cancelStage()
+    {
+        throw new NotImplementedException();
+    }
 }

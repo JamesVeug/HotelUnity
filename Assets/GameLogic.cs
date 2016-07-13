@@ -5,7 +5,7 @@ using System;
 
 public class GameLogic : MonoBehaviour {
 
-    public float aiSpawnFrequency = 1;
+    public float aiSpawnFrequency = 0.5f;
     public StaffAI staffAI;
     public GuestAI AIToSpawn;
 
@@ -22,7 +22,7 @@ public class GameLogic : MonoBehaviour {
 	void Start () {
         name = "GameLogic";
         data = GameObject.FindObjectOfType<GameData>();
-        spawnTime = Time.time + 1;
+        spawnTime = Time.time + 0.05f;
 	}
 	
 	// Update is called once per frame
@@ -49,13 +49,14 @@ public class GameLogic : MonoBehaviour {
         }
     }
 
-    public void addHouseKeeper(Vector3 position)
+    public StaffAI addHouseKeeper(Vector3 position)
     {
         StaffAI ai = Instantiate(staffAI);
-        ai.transform.position = new Vector3(position.x, 0, position.y);
+        ai.transform.position = new Vector3(position.x, 0, position.z);
         //ai.targetPosition = new Vector3(target.x, 0, target.y);
 
         spawnedStaffAI.Add(ai);
+        return staffAI;
     }
 
     public void initialize()
@@ -90,6 +91,38 @@ public class GameLogic : MonoBehaviour {
 
         //Debug.Log("Initialized");
         initialized = true;
+
+
+        // Staff
+
+        // Staff
+        // Maid 19,21
+        addHouseKeeper(new Vector3(19, 0, 21));
+    }
+
+    public BBedroom getDirtyRoom()
+    {
+        List<BBedroom> rooms = data.dTileMap.getBedrooms();
+
+        BBedroom available = null;
+        foreach (BBedroom r in rooms)
+        {
+            if (r.hasDirtyBeds())
+            {
+
+                available = r;
+                break;
+            }
+        }
+
+        if (available == null)
+        {
+            //Debug.Log("No Dirty Rooms available");
+            return null;
+        }
+
+        // Return what we bought
+        return available;
     }
 
     public BBedroom getAvailableRoom()
@@ -109,7 +142,7 @@ public class GameLogic : MonoBehaviour {
 
         if( available == null)
         {
-            Debug.Log("No Rooms available");
+            //Debug.Log("No Clean Rooms available");
             return null;
         }
 

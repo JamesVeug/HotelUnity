@@ -25,12 +25,12 @@ public abstract class BuildableAI : Buildable, ICloneable, IEquatable<BuildableA
         if (!initialized) { initialize(); }
     }
 
-    public override void pressMouse(Vector3 pressPosition)
+    public override void pressMouse(Vector3 pressPosition, MouseButton mouseButton)
     {
         if (!initialized) { initialize(); }
     }
 
-    public override void releaseMouse(Vector3 pressedPosition, Vector3 releasePosition)
+    public override void releaseMouse(Vector3 pressedPosition, Vector3 releasePosition, MouseButton mouseButton)
     {
         if (!initialized) { initialize(); }
 

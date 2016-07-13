@@ -23,6 +23,11 @@ public abstract class BBedroom : BuildableRoom{
         return beds[v];
     }
 
+    public int bedCount()
+    {
+        return beds.Count;
+    }
+
     protected override void addItem(BuildableItem item)
     {
         base.addItem(item);
@@ -40,8 +45,28 @@ public abstract class BBedroom : BuildableRoom{
 
     public bool hasBedsAvailable()
     {
-        //Debug.Log("Beds " + bedOwners.Count + " , " + beds.Count);
-        return bedOwners.Count < beds.Count;
+        foreach (BuildableBed b in beds)
+        {
+            if (!b.isDirty && !b.isSoldToGuest())
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    public bool hasDirtyBeds()
+    {
+        foreach(BuildableBed b in beds)
+        {
+            if( b.isDirty)
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     public abstract int checkin(AIBase ai);

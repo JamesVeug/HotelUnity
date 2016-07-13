@@ -50,15 +50,57 @@ public class SelectionTile : MonoBehaviour {
         transform.position = new Vector3(rect.left,0,rect.top);
         buildGraphics();
 
-        if (builderStage == BuildableRoom.STAGE_ITEMS)
-        {
-            setupSelectionTileForItems();
-        }
-        else
-        {
-            setupSelectionTileForBuildingARoom();
-        }
+		if (builder is BuildableRoom) {
+
+			// Setup for Building a room
+			if (builderStage == BuildableRoom.STAGE_ITEMS) {
+				setupSelectionTileForItems ();
+			} else {
+				setupSelectionTileForBuildingARoom ();
+			}
+		}
+		else if (builder is BuildableStaff)
+		{
+			setupSelectionTileForStaff();
+		}
     }
+
+	public void setupSelectionTileForStaff()
+	{
+		int x = rect.left;
+		int y = rect.top;
+
+		// Needs more options!
+		if (data.dTileMap.isRoom(x,y) || data.dTileMap.isWalkWay(x,y))
+		{
+			valid = true;
+		}
+		else {
+			valid = false;
+		}
+
+		// Render the position
+		for (int i = 0; i < rend.Count; i++)
+		{
+			Renderer r = rend[i];
+			//Debug.Log("Objects " + i + "/" + tilesSelectionObjects.Count);
+			//Debug.Log("Rend " + i + "/" + rend.Count);
+			if (valid)
+			{
+				r.material = selectionWorkMaterial;
+			}
+			else
+			{
+				r.material = selectionFailMaterial;
+			}
+			r.material.mainTextureScale = new Vector2(rect.width, rect.height);
+			tilesSelectionObjects[i].transform.localPosition = Vector3.zero;
+			tilesSelectionObjects[i].transform.localScale = rect.size;
+			//Debug.Log("Position " + tilesSelectionObjects[i].transform.localPosition);
+
+		}
+
+	}
 
     public void setupSelectionTileForItems()
     {
@@ -72,8 +114,8 @@ public class SelectionTile : MonoBehaviour {
         valid = true;
 
         // Render the position
-        List<Vector2> tiles = room.getCurrentBuildingItem().getTiles();
-        Debug.Log("Tiles " + tiles.Count);
+        List<Vector2> tiles = placingItem.getTiles();
+        //Debug.Log("Tiles " + tiles.Count);
 
         DRectangle temp = ScriptableObject.CreateInstance<DRectangle>();
         for (int i = 0; i < rend.Count; i++)
@@ -83,7 +125,10 @@ public class SelectionTile : MonoBehaviour {
 
             //Debug.Log(tilesSelectionObjects[i]);
             //Debug.Log(tiles[i]);
-            o.transform.localPosition = new Vector3(tiles[i].x - rect.width/2, 0, tiles[i].y - rect.height / 2);
+            float x = tiles[i].x - rect.width  / 2 - placingItem.left;
+            float z = tiles[i].y - rect.height / 2 - placingItem.top;
+
+            o.transform.localPosition = new Vector3(x,0,z);
             o.transform.localScale = Vector3.one;
 
 
@@ -121,8 +166,8 @@ public class SelectionTile : MonoBehaviour {
         for (int i = 0; i < rend.Count; i++)
         {
             Renderer r = rend[i];
-            Debug.Log("Objects " + i + "/" + tilesSelectionObjects.Count);
-            Debug.Log("Rend " + i + "/" + rend.Count);
+            //Debug.Log("Objects " + i + "/" + tilesSelectionObjects.Count);
+            //Debug.Log("Rend " + i + "/" + rend.Count);
             if (valid)
             {
                 r.material = selectionWorkMaterial;
@@ -134,7 +179,7 @@ public class SelectionTile : MonoBehaviour {
             r.material.mainTextureScale = new Vector2(rect.width, rect.height);
             tilesSelectionObjects[i].transform.localPosition = Vector3.zero;
             tilesSelectionObjects[i].transform.localScale = rect.size;
-            Debug.Log("Position " + tilesSelectionObjects[i].transform.localPosition);
+            //Debug.Log("Position " + tilesSelectionObjects[i].transform.localPosition);
 
         }
     }
@@ -172,14 +217,14 @@ public class SelectionTile : MonoBehaviour {
         // Remove unneeded tiles
         while (rend.Count > tileRequirements)
         {
-            Debug.Log("Removing one with size " + rend.Count + " children: " + transform.childCount);
+            //Debug.Log("Removing one with size " + rend.Count + " children: " + transform.childCount);
             GameObject o = tilesSelectionObjects[tilesSelectionObjects.Count - 1];
             tilesSelectionObjects.RemoveAt(tilesSelectionObjects.Count - 1);
             Destroy(o);
 
             rend.RemoveAt(rend.Count - 1);
         }
-        Debug.Log("Final size " + rend.Count);
+        //Debug.Log("Final size " + rend.Count);
 
     }
 
@@ -306,7 +351,6 @@ public class SelectionTile : MonoBehaviour {
         // Windows
         if (!containsAll(this.windowPositions, room.windows))
         {
-            Debug.Log("Data Window ADDED");
             this.windowPositions.Clear();
             this.windowPositions.AddRange(room.windows);
             buildWindowsChanged = true;
@@ -395,6 +439,13 @@ public class SelectionTile : MonoBehaviour {
         foreach (BuildableItem L in b)
         {
             if (!a.Contains(L))
+            {
+                return false;
+            }
+        }
+        foreach (BuildableItem L in a)
+        {
+            if (!b.Contains(L))
             {
                 return false;
             }

@@ -4,16 +4,16 @@ using System;
 
 public class Sleep : Order
 {
-    public override bool executeOrder(AIBase ai, Navigation nav)
+	public override RETURN_TYPE executeOrder(AIBase ai, Navigation nav)
     {
         if (ai.property_sleep < 1)
         {
             // Go to sleep
             ai.property_sleep = Mathf.Min(1,ai.property_sleep+Time.deltaTime);
-            return false;
+			return RETURN_TYPE.PROBLEM;
         }
 
         // Wake up
-        return true;
+		return RETURN_TYPE.COMPLETED;
     }
 }

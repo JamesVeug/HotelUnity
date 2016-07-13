@@ -4,7 +4,7 @@ using System;
 
 public class GetOutOfBed : Order
 {
-    public override bool executeOrder(AIBase ai, Navigation nav)
+	public override RETURN_TYPE executeOrder(AIBase ai, Navigation nav)
     {
         if (ai.currentInteraction != null)
         {
@@ -14,6 +14,6 @@ public class GetOutOfBed : Order
         }
 
         // Wake up
-        return true;
+		return RETURN_TYPE.COMPLETED;
     }
 }

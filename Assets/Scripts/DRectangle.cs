@@ -24,11 +24,6 @@ public class DRectangle : ScriptableObject{
         return Create((int)position.x, (int)position.z, (int)size.x, (int)size.z);
     }
 
-    public void OnDestroy()
-    {
-        Debug.Log("Destroyed Rectangle");
-    }
-
     public int right
     {
         get { return left + width - 1; }

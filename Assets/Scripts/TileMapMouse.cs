@@ -5,7 +5,8 @@ using System;
 
 [RequireComponent(typeof(TileMap))]
 public class TileMapMouse : MonoBehaviour {
-    //public GameObject selectionCube;
+
+
     public Buildable whatToBuild;
 
     private TileMap tileMap;
@@ -72,32 +73,33 @@ public class TileMapMouse : MonoBehaviour {
             return;
         }
 
+        Buildable.MouseButton down = Input.GetMouseButtonDown(0) ? Buildable.MouseButton.Left : Input.GetMouseButtonDown(2) ? Buildable.MouseButton.Middle : Buildable.MouseButton.Unknown;
+        Buildable.MouseButton up = Input.GetMouseButtonUp(0) ? Buildable.MouseButton.Left : Input.GetMouseButtonUp(2) ? Buildable.MouseButton.Middle : Buildable.MouseButton.Unknown;
 
         // BUILD THE STUFF!
-        if (Input.GetMouseButtonDown(0))
+        if (down != Buildable.MouseButton.Unknown)
         {
             // Pressed mouse
             pressedPoint = currentPoint;
-            whatToBuild.pressMouse(pressedPoint);
+            whatToBuild.pressMouse(clone(pressedPoint), down);
         }
-        else if (Input.GetMouseButtonUp(0))
+        else if (up != Buildable.MouseButton.Unknown)
         {
             // Release mouse
-            whatToBuild.releaseMouse(pressedPoint, currentPoint);
+            whatToBuild.releaseMouse(clone(pressedPoint), clone(currentPoint), up);
             pressedPoint = Vector3.zero;
         }
         else if (pressedPoint != Vector3.zero)
         {
             // Drag Mouse
             if (lastPoint != currentPoint) {
-                whatToBuild.dragMouse(pressedPoint, currentPoint);
+                whatToBuild.dragMouse(clone(pressedPoint), clone(currentPoint));
             }
         }
         else if(lastPoint != currentPoint)
         {
             // Move Mouse
-            whatToBuild.moveMouse(currentPoint);
-            //selectionCube.transform.position = currentPoint;
+            whatToBuild.moveMouse(clone(currentPoint));
         }
         lastPoint = currentPoint;
 
@@ -121,8 +123,9 @@ public class TileMapMouse : MonoBehaviour {
         else if (Input.GetButtonDown("Cancel"))
         {
             //Debug.Log("Cancel");
-            whatToBuild = (Buildable)ScriptableObject.CreateInstance(buildableTypes[currentTypeIndex][currentValueIndex].ToString());
-            selectionScript.setBuilder(whatToBuild);
+            whatToBuild.cancelStage();
+            //whatToBuild = (Buildable)ScriptableObject.CreateInstance(buildableTypes[currentTypeIndex][currentValueIndex].ToString());
+            //selectionScript.setBuilder(whatToBuild);
         }
         else if (Input.GetButtonDown("SwitchValue"))
         {
@@ -182,6 +185,11 @@ public class TileMapMouse : MonoBehaviour {
             selectionScript.setBuilder(whatToBuild);
             Debug.Log(whatToBuild.GetType().Name);
         }
+    }
+
+    Vector3 clone(Vector3 v)
+    {
+        return new Vector3(v.x, v.y, v.z);
     }
 
     void OnEnable()

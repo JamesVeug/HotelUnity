@@ -50,11 +50,18 @@ public abstract class BuildableRoom : Buildable
     protected SelectionTile selectionScript;
     //protected GameObject selectionCube;
 
+	public void OnEnable(){
+		initialize ();
+	}
+
     private void initialize()
     {
 
-        selectionScript = GameObject.FindObjectOfType<SelectionTile>();
-        //selectionCube = selectionScript.gameObject;
+		selectionScript = GameObject.FindObjectOfType<SelectionTile>();
+        if (selectionScript != null && selectionScript.rect != null)
+        {
+            selectionScript.rect.size = new Vector3(1, 0, 1);
+        }
 
         Stage = STAGE_BLUEPRINT;
         Property = PROPERTY_BP_CREATE;
@@ -71,12 +78,13 @@ public abstract class BuildableRoom : Buildable
         if (Stage == STAGE_BLUEPRINT && Property == PROPERTY_BP_CREATE)
         {
             //Vector3 cubeSize = new Vector3(Mathf.Floor(selectionScript.rect.width / 2), 0, Mathf.Floor(selectionScript.rect.height / 2));
-            selectionScript.rect.position = movePosition;// - cubeSize;
+            selectionScript.rect.position = movePosition;
+			selectionScript.rect.size = new Vector3(1,0,1);
         }
-        else if (Stage == STAGE_ITEMS)
+        else if (Stage == STAGE_ITEMS && Property == PROPERTY_ITEMS_PLACE)
         {
             //Vector3 cubeSize = new Vector3(Mathf.Floor(selectionScript.rect.width/2), 0, Mathf.Floor(selectionScript.rect.height/2));
-            selectionScript.rect.position = movePosition;// - cubeSize;
+            selectionScript.rect.position = movePosition;
         }
     }
 
@@ -85,7 +93,7 @@ public abstract class BuildableRoom : Buildable
         return editingItem;
     }
 
-    public override void pressMouse(Vector3 pressPosition)
+    public override void pressMouse(Vector3 pressPosition, MouseButton mouseButton)
     {
         if (!initialized) { initialize(); }
 
@@ -106,7 +114,7 @@ public abstract class BuildableRoom : Buildable
         }
     }
 
-    public override void releaseMouse(Vector3 pressedPosition, Vector3 releasePosition)
+    public override void releaseMouse(Vector3 pressedPosition, Vector3 releasePosition, MouseButton mouseButton)
     {
         if (!initialized) { initialize(); }
 
@@ -156,8 +164,7 @@ public abstract class BuildableRoom : Buildable
             if (selectionScript.isValid())
             {
                 // Add Item
-                //BuildableItem clone = (BuildableItem)getPlaceableItems()[currentItemIndex].Clone();
-                editingItem.left = (int)selectionScript.rect.left-selectionScript.rect.width  / 2;
+                editingItem.left = (int)selectionScript.rect.left - selectionScript.rect.width  / 2;
                 editingItem.top = (int)selectionScript.rect.top - selectionScript.rect.height / 2;
                 addItem(editingItem);
                 data.dTileMap.AddItem(editingItem);
@@ -171,7 +178,7 @@ public abstract class BuildableRoom : Buildable
                 {
                     if (item.contains(releasePosition))
                     {
-                        //Debug.Log("Clicked on item");
+                        //Debug.Log("Clicked on item " + selectionScript.rect.position);
                         Property = PROPERTY_ITEMS_EDIT;
                         editingItem = item;
                         break;
@@ -221,7 +228,7 @@ public abstract class BuildableRoom : Buildable
             return Navigation.Direction.North;
         }
 
-        //Debug.Log("Invalid " + roomPosition + " - > " + selectionScript.rect.position + " " + selectionCube.transform.localScale);
+        Debug.Log("Invalid " + roomPosition + " - > " + selectionScript.rect.position + " " + selectionScript.transform.localScale);
         return Navigation.Direction.North;
     }
 
@@ -363,6 +370,37 @@ public abstract class BuildableRoom : Buildable
         }
         Debug.Log("Property: " + Property);
         Debug.Log("Stage: " + Stage);
+    }
+
+    public override void cancelStage()
+    {
+        if (Stage == STAGE_BLUEPRINT && Property == PROPERTY_BP_RESIZE)
+        {
+
+        }
+        else if (Stage == STAGE_WINDOWSDOORS)
+        {
+
+        }
+        else if (Stage == STAGE_ITEMS && Property == PROPERTY_ITEMS_PLACE)
+        {
+            // If we are editing an item, delete it
+            while(items.Count > 0)
+            {
+                BuildableItem i = items[0];
+                data.dTileMap.RemoveItem(i);
+                items.Remove(i);
+            }
+
+        }
+        else if(Stage == STAGE_ITEMS && Property == PROPERTY_ITEMS_EDIT)
+        {
+            // Not editing an item, Delete all items and go back to window doors
+            int index = items.IndexOf(editingItem);
+            data.dTileMap.RemoveItem(items[index]);
+            items.Remove(items[index]);
+            Property = PROPERTY_ITEMS_PLACE;
+        }
     }
 
     public override int getStage()

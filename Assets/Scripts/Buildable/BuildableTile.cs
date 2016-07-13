@@ -16,6 +16,11 @@ public class BuildableTile : Buildable
         throw new NotImplementedException();
     }
 
+    public override void cancelStage()
+    {
+        throw new NotImplementedException();
+    }
+
     public override bool canBeBuilt()
     {
         return true;
@@ -47,13 +52,13 @@ public class BuildableTile : Buildable
         //throw new NotImplementedException();
     }
 
-    public override void pressMouse(Vector3 pressPosition)
+    public override void pressMouse(Vector3 pressPosition, MouseButton mouseButton)
     {
         //throw new NotImplementedException();
         changedTile = new Vector2(pressPosition.x, pressPosition.z);
     }
 
-    public override void releaseMouse(Vector3 pressedPosition, Vector3 releasePosition)
+    public override void releaseMouse(Vector3 pressedPosition, Vector3 releasePosition, MouseButton mouseButton)
     {
         //Debug.Log("Release");
 

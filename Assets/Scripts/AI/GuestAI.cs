@@ -32,24 +32,18 @@ public class GuestAI : AIBase
         property_sleep = UnityEngine.Random.Range(0, 0.5f);
     }
 
-    void FixedUpdate()
+    // Update is called once per frame
+    void Update()
     {
         if (State == STATE_WALK)
         {
             moveTowardsTarget();
         }
-    }
-
-    // Update is called once per frame
-    void Update () {
-
-        
-
-        if( State == STATE_IDLE)
+        else if (State == STATE_IDLE)
         {
             idle();
         }
-	}
+    }
 
     private void idle()
     {
@@ -67,26 +61,32 @@ public class GuestAI : AIBase
 
             // Process the next oder
             Order order = orders.Peek();
-            if (order.executeOrder(this, nav))
-            {
-                // Finished the order.
-                // Get rid of it
-                Order completed = orders.Pop();
-                if(completed is GoHome)
-                {
-                    Destroy(gameObject);
-                }
-                else if (completed is GetInBed)
-                {
-                    BuildableBed bed = getOwnedBed();
-                    bed.setRoomToInUse();
-                }
-                else if (completed is Sleep)
-                {
-                    BuildableBed bed = getOwnedBed();
-                    bed.setRoomToDirty();
-                }
-            }
+			Order.RETURN_TYPE status = order.executeOrder (this, nav);
+
+			if (status == Order.RETURN_TYPE.COMPLETED) {
+				orders.Pop ();
+				
+				// Finished the order successfully.
+				// Get rid of it
+				if (order is GoHome) {
+					Destroy (gameObject);
+				} else if (order is GetInBed) {
+					BuildableBed bed = getOwnedBed ();
+					bed.setRoomToInUse ();
+				} else if (order is Sleep) {
+					BuildableBed bed = getOwnedBed ();
+					bed.setRoomToDirty ();
+				}
+			} else if (status == Order.RETURN_TYPE.FAILED) {
+				if (order is BuyBed) {
+					
+					// There are no beds available
+					// Get angry and go home
+					orders.Clear();
+					orders.Push (ScriptableObject.CreateInstance<GoHome>());
+				}
+
+			}
         }
     }
 

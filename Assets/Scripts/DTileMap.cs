@@ -21,6 +21,7 @@ public class DTileMap : MonoBehaviour{
     List<BHouseKeepingRoom> houseKeepingRooms;
     List<BBedroom> bedRooms;
     public List<Vector2> changes;
+    public bool buildHotel = true;
 
     public void initialize(int width, int height)
     {
@@ -44,6 +45,59 @@ public class DTileMap : MonoBehaviour{
                 changes.Add(new Vector2(i, j));
             }
         }
+
+        // Build Temporary Hotel
+        if( buildHotel)
+        {
+            buildTempHotel();
+        }
+    }
+
+    private void buildTempHotel()
+    {
+        Debug.Log("Building Hotel");
+
+        // Reception 2,15,7,8 Doors 7,22 & 2,16
+        // FrontDesk 3,20
+        List<DDoor> receptionDoors = new List<DDoor>();
+        receptionDoors.Add(DDoor.create(new Vector2(7, 22), Navigation.Direction.North));
+        receptionDoors.Add(DDoor.create(new Vector2(2, 16), Navigation.Direction.West));
+        BReceptionRoom reception = BReceptionRoom.Create(2, 15, 7, 8, 3, 19, 0, receptionDoors);
+        AddItem(reception.frontdesks[0]);
+        ApplyToTileMap(reception);
+        RecordRoom();
+
+
+        // Bedroom 9,15,9,8 Doors 10,22 & 16,22
+        // beds 10-16,20
+        List<DDoor> bedroomDoors = new List<DDoor>();
+        bedroomDoors.Add(DDoor.create(new Vector2(10, 22), Navigation.Direction.North));
+        bedroomDoors.Add(DDoor.create(new Vector2(16, 22), Navigation.Direction.North));
+        List<BuildableBed> beds = new List<BuildableBed>();
+        for(int i = 0; i <= 6; i++)
+        {
+            beds.Add(ISingleBed.create(new Vector2(10+i, 20), 0));
+            beds.Add(ISingleBed.create(new Vector2(10 + i, 17), 0));
+        }
+
+        BSharedBedroom bedroom = BSharedBedroom.Create(9, 15, 9, 8, bedroomDoors, beds);
+        ApplyToTileMap(bedroom);
+        for (int i = 0; i < bedroom.bedCount(); i++)
+        {
+            BuildableBed bed = bedroom.getBed(i);
+            AddItem(bed);
+        }
+        RecordRoom();
+
+
+        // HK 18,15,5,8 Doors 19,22
+        List<DDoor> hkDoors = new List<DDoor>();
+        hkDoors.Add(DDoor.create(new Vector2(19, 22), Navigation.Direction.North));
+        BHouseKeepingRoom houseKeeping = BHouseKeepingRoom.Create(18, 15, 5, 8, hkDoors);
+        ApplyToTileMap(houseKeeping);
+        RecordRoom();
+
+
     }
 
     public void setTile(int i, int j, int type)
@@ -120,6 +174,7 @@ public class DTileMap : MonoBehaviour{
         BuildableRoom room = getRoom(x, y);
         if (room == null)
         {
+            Debug.Log("Room does not exist " + x + "," + y);
             return null;
         }
 
@@ -180,6 +235,16 @@ public class DTileMap : MonoBehaviour{
         var requiredTiles = item.getItemTiles();
         foreach(Vector2 tile in requiredTiles) {
             tiles[(int)(tile.y * width + tile.x)].item = true;
+            changes.Add(new Vector2((int)tile.x, (int)tile.y));
+        }
+    }
+
+    public void RemoveItem(BuildableItem item)
+    {
+        var requiredTiles = item.getItemTiles();
+        foreach (Vector2 tile in requiredTiles)
+        {
+            tiles[(int)(tile.y * width + tile.x)].item = false;
             changes.Add(new Vector2((int)tile.x, (int)tile.y));
         }
     }

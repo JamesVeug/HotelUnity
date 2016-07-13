@@ -108,6 +108,12 @@ public abstract class AIBase : MonoBehaviour
 
         // Check us in
         bedIndex = room.checkin(this);
+        if( bedIndex == -1)
+        {
+            // Couldn't check in
+            return false;
+        }
+
         ownedRoom = room;
         bedSideIndex = 0;
 
@@ -144,13 +150,14 @@ public abstract class AIBase : MonoBehaviour
 
     public BuildableBed getOwnedBed()
     {
-        BuildableRoom room = getOwnedRoom();
+        BBedroom room = getOwnedRoom();
         if (room == null)
         {
             return null;
         }
 
-        return getOwnedRoom().getBed(getBedIndex());
+        Debug.Log("Index " + getBedIndex());
+        return room.getBed(getBedIndex());
     }
 
     public Order getCurrentOrder()
@@ -166,6 +173,7 @@ public abstract class AIBase : MonoBehaviour
         }
         else if (path.Count == 0)
         {
+            Debug.DrawLine(transform.position, targetPosition, Color.red, 1);
             Debug.LogError("No points in path - target = " + targetPosition);
         }
         else if (pathIndex >= path.Count)

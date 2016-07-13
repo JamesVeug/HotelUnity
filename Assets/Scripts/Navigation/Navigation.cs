@@ -214,9 +214,9 @@ public class Navigation : ScriptableObject{
         // Couldn't find the path
         if (!foundPath)
         {
-            //Debug.Log("Couldn't find path from " + startTile + " to " + endTile);
-            //Debug.Log("Closest path " + " with a heuristic of " + closest.heuristic + " " + closest.ToString());
-            //Debug.DrawLine(start+new Vector3(0,1,0), end + new Vector3(0, 1, 0), Color.red, 10);
+            Debug.Log("Couldn't find path from " + startTile + " to " + endTile);
+            Debug.Log("Closest path " + " with a heuristic of " + closest.heuristic + " " + closest.ToString());
+            Debug.DrawLine(start+new Vector3(0,1,0), end + new Vector3(0, 1, 0), Color.red, 10);
             return nodes;
         }
         else

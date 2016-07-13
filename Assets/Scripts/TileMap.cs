@@ -19,6 +19,8 @@ public class TileMap : MonoBehaviour
     public int previousTemp;
     public float time;*/
 
+    private Dictionary<Vector2, GameObject> builtObjects;
+
     public int width = 50;
     public int height = 50;
     public float tileSize = 1.0f;
@@ -64,24 +66,11 @@ public class TileMap : MonoBehaviour
     {
         BuildMesh();
         selectionScript = FindObjectOfType<SelectionTile>();
+        builtObjects = new Dictionary<Vector2, GameObject>();
     }
 
     void Update()
     {
-
-       /* MeshRenderer rendtemp = GetComponent<MeshRenderer>();
-        if(rendtemp.materials.Length > 1 && time < Time.time)   
-        {
-            rendtemp.materials[previousTemp].color = temp.color;
-            previousTemp++;
-            if( previousTemp >= width*height)
-            {
-                previousTemp = 0;
-            }
-            rendtemp.materials[previousTemp].color = Color.red;
-            time = Time.time + 1;
-        }*/
-
         if ( map.changes == null)
         {
             Debug.LogError("Map.Changes is null");
@@ -111,7 +100,7 @@ public class TileMap : MonoBehaviour
                 rend.materials = currentMaterials;
 
 
-                //Debug.Log(x + "," + y + "-> " + index + " " + materials[tile]);
+                //Debug.Log(x + "," + y + "-> " + index + " ");
 
                 // Wall types
                 if ( map.hasWall(x, y) )
@@ -140,6 +129,13 @@ public class TileMap : MonoBehaviour
                     if (item == null) { Debug.LogError("No item at position " + x + "," + y); }
                     //Debug.Log("Placed Item at " + x + "," + y);
                     buildItem(item);
+                }
+                else if( builtObjects.ContainsKey(c) )
+                {
+                    Debug.Log("DELETE THIS ITEM");
+                    GameObject o = builtObjects[c];
+                    builtObjects.Remove(c);
+                    Destroy(o);
                 }
             }
             map.changes.Clear();
@@ -311,7 +307,6 @@ public class TileMap : MonoBehaviour
                     }
                     else if( selectionScript.placedItemsModified() )
                     {
-
                     }
                 }
             }
@@ -496,7 +491,12 @@ public class TileMap : MonoBehaviour
         int index = 0;
         if (itemObject == null)
         {
-            for(int i = 0; i < itemScripts.Length;i++)
+            GameObject bedParent = new GameObject();
+            builtObjects.Add(item.getItemTiles()[0], bedParent);
+            bedParent.name = name + "Parent";
+            //Debug.Log("Added " + item.getItemTiles()[0]);
+
+            for (int i = 0; i < itemScripts.Length;i++)
             {
 
                 if( itemScripts[i] == item.GetType())
@@ -524,6 +524,7 @@ public class TileMap : MonoBehaviour
                 dirtyObject.transform.GetChild(0).transform.rotation = item.rotation;
                 dirtyObject.SetActive(false);
                 bed.dirtyGameObject = dirtyObject;
+                dirtyObject.transform.parent = bedParent.transform;
 
                 GameObject inUseObject = (GameObject)Instantiate(itemObjects[index + 2]);
                 inUseObject.name = name + "(InUse)";
@@ -531,8 +532,12 @@ public class TileMap : MonoBehaviour
                 inUseObject.transform.GetChild(0).transform.rotation = item.rotation;
                 inUseObject.SetActive(false);
                 bed.inUseGameObject = inUseObject;
-                Debug.Log("BuildableBed " + (index + 1));
+                inUseObject.transform.parent = bedParent.transform;
+                //Debug.Log("BuildableBed " + (index + 1));
             }
+
+            // Parent assignment needs to be last so The beds can be disabled/enabled
+            itemObject.transform.parent = bedParent.transform;
         }
         itemObject.transform.position = new Vector3((int)item.position.x, 0, (int)item.position.z);
         itemObject.transform.GetChild(0).transform.rotation = item.rotation;
@@ -542,10 +547,6 @@ public class TileMap : MonoBehaviour
         {
             Debug.LogError("item.gameObject " + item.gameObject);
         }
-
-
-
-
     }
 
     private void rotateByBounds(GameObject o, DRectangle room)

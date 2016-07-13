@@ -43,12 +43,12 @@ public abstract class BuildableItem : Buildable, ICloneable, IEquatable<Buildabl
         throw new NotImplementedException();
     }
 
-    public override void pressMouse(Vector3 pressPosition)
+    public override void pressMouse(Vector3 pressPosition, MouseButton mouseButton)
     {
         throw new NotImplementedException();
     }
 
-    public override void releaseMouse(Vector3 pressedPosition, Vector3 releasePosition)
+    public override void releaseMouse(Vector3 pressedPosition, Vector3 releasePosition, MouseButton mouseButton)
     {
         throw new NotImplementedException();
     }
@@ -79,6 +79,11 @@ public abstract class BuildableItem : Buildable, ICloneable, IEquatable<Buildabl
     }
 
     public override void switchValue()
+    {
+        throw new NotImplementedException();
+    }
+
+    public override void cancelStage()
     {
         throw new NotImplementedException();
     }

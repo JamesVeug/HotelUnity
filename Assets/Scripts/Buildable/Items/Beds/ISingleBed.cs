@@ -45,4 +45,11 @@ public class ISingleBed : BuildableBed{
     {
         return 1;
     }
+
+    public static ISingleBed create(Vector2 vector2, int rotation)
+    {
+        ISingleBed bed = (ISingleBed)ScriptableObject.CreateInstance<ISingleBed>().Create((int)vector2.x, (int)vector2.y);
+        bed.rotation = Quaternion.Euler(0, rotation, 0);
+        return bed;
+    }
 }

@@ -49,4 +49,19 @@ public class BReceptionRoom : BuildableRoom{
             frontdesks.Add((BuildableReception)item);
         }
     }
+
+    public static BReceptionRoom Create(int x, int y, int width, int height, int frontDeskX, int frontDeskY, int frontDeskRotation, List<DDoor> doorPositions)
+    {
+        Vector3 position = new Vector3(x, 0, y);
+        Vector3 size = new Vector3(width, 0, height);
+        BReceptionRoom room = (BReceptionRoom)ScriptableObject.CreateInstance<BReceptionRoom>().Create(position, size);
+
+        BuildableReception frontDesk = (BuildableReception)ScriptableObject.CreateInstance<BuildableReception>().Create(frontDeskX,frontDeskY);
+        frontDesk.rotation = Quaternion.Euler(0, frontDeskRotation, 0);
+        room.addItem(frontDesk);
+        
+        room.doors.AddRange(doorPositions);
+
+        return room;
+    }
 }

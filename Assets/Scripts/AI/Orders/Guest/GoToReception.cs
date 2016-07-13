@@ -4,8 +4,9 @@ using System.Collections;
 public class GoToReception : Order {
 
 
-    public override bool executeOrder(AIBase ai, Navigation nav)
+	public override RETURN_TYPE executeOrder(AIBase ai, Navigation nav)
     {
+
         if (!(ai.getCurrentRoom() is BReceptionRoom))
         {
 
@@ -13,15 +14,15 @@ public class GoToReception : Order {
             if (reception == null)
             {
                 //Debug.Log("No Reception!");
-                return false;
+				return RETURN_TYPE.FAILED;
             }
 
             Vector3 pos = nav.getClosestDoorPosition(ai, reception);
             ai.walkToPosition(pos);
-            return false;
+			return RETURN_TYPE.PROBLEM;
         }
 
         // Should be in reception now
-        return true;
+		return RETURN_TYPE.COMPLETED;
     }
 }

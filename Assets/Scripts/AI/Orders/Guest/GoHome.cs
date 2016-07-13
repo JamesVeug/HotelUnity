@@ -4,13 +4,13 @@ using System.Collections;
 public class GoHome : Order {
 
     private Vector2 spawnPosition = Vector2.zero;
-    public override bool executeOrder(AIBase ai, Navigation nav)
+	public override RETURN_TYPE executeOrder(AIBase ai, Navigation nav)
     {
         // Check out first if we need to
         if (ai.getOwnedRoom() != null)
         {
             ai.addOrder(ScriptableObject.CreateInstance<CheckOut>());
-            return false;
+			return RETURN_TYPE.PROBLEM;
         }
 
         // Get a spawn position
@@ -21,10 +21,10 @@ public class GoHome : Order {
             // Walk there
             Vector3 worldPosition = new Vector3(spawnPosition.x, 0, spawnPosition.y);
             ai.walkToPosition(worldPosition);
-            return false;
+			return RETURN_TYPE.PROBLEM;
         }
 
         // Should be in reception now
-        return true;
+		return RETURN_TYPE.COMPLETED;
     }
 }

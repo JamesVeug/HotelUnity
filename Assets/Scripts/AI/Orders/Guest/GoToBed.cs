@@ -3,20 +3,20 @@ using System.Collections;
 
 public class GoToBed : Order
 {
-    public override bool executeOrder(AIBase ai, Navigation nav)
+	public override RETURN_TYPE executeOrder(AIBase ai, Navigation nav)
     {
         // Don't own a room/bed
         if( ai.getOwnedRoom() == null)
         {
             ai.addOrder(ScriptableObject.CreateInstance<BuyBed>());
-            return false;
+			return RETURN_TYPE.PROBLEM;
         }
 
         // Are we in the owned room
         if( !ai.getCurrentRoom().Equals(ai.getOwnedRoom()) )
         {
             ai.addOrder(ScriptableObject.CreateInstance<GoToRoom>());
-            return false;
+			return RETURN_TYPE.PROBLEM;
         }
 
         // Walk to bed
@@ -25,12 +25,12 @@ public class GoToBed : Order
         if( (!ai.isByTile(bedTile)) )
         {
             ai.walkToItem(bedPosition);
-            return false;
+			return RETURN_TYPE.PROBLEM;
         }
 
         // We are at beds position
         ai.currentInteraction = ai.getOwnedBed();
-        return true;
+		return RETURN_TYPE.COMPLETED;
     }
 
 }
