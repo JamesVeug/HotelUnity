@@ -170,7 +170,7 @@ public class DTileMap : MonoBehaviour{
         BuildableRoom room = getRoom(x, y);
         if (room == null)
         {
-            Debug.Log("Room doesn't exist " + x + "," + y);
+            //Debug.Log("Room doesn't exist " + x + "," + y);
             return null;
         }
 
@@ -261,6 +261,21 @@ public class DTileMap : MonoBehaviour{
     public int maxTileTypes()
     {
         return 7;
+    }
+
+
+    public void RemoveFromTileMap(BuildableRoom room)
+    {
+        for (int i = 0; i < room.width; i++)
+        {
+            for (int j = 0; j < room.height; j++)
+            {
+                int x = room.left + i;
+                int y = room.top + j;
+                setTile(x, y, DTile.TYPE_GRASS);
+
+            }
+        }
     }
 
     public void ApplyToTileMap(BuildableRoom room)

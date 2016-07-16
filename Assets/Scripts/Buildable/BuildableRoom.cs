@@ -29,6 +29,7 @@ public abstract class BuildableRoom : Buildable
     //private Vector3 lastPoint = Vector3.zero;
     private Vector3 originalPosition = Vector3.zero;
 
+    public GameObject roomObject;
     public List<DDoor> doors = new List<DDoor>();
     public List<DWindow> windows = new List<DWindow>();
     public List<BuildableItem> items = new List<BuildableItem>();
@@ -380,16 +381,36 @@ public abstract class BuildableRoom : Buildable
         }
         else if (Stage == STAGE_WINDOWSDOORS)
         {
-
+            Stage = STAGE_BLUEPRINT;
+            Property = PROPERTY_BP_CREATE;
+            selectionScript.rect.width = 1;
+            selectionScript.rect.height = 1;
+            doors.Clear();
+            windows.Clear();
+            walls.Clear();
         }
         else if (Stage == STAGE_ITEMS && Property == PROPERTY_ITEMS_PLACE)
         {
             // If we are editing an item, delete it
-            while(items.Count > 0)
+            if (items.Count > 0)
             {
-                BuildableItem i = items[0];
-                data.dTileMap.RemoveItem(i);
-                items.Remove(i);
+                while (items.Count > 0)
+                {
+                    BuildableItem i = items[0];
+                    data.dTileMap.RemoveItem(i);
+                    items.Remove(i);
+                }
+            }
+            else
+            {
+                selectionScript.rect.left  = left;
+                selectionScript.rect.top   = top;
+                selectionScript.rect.width = width;
+                selectionScript.rect.height = height;
+                data.dTileMap.RemoveFromTileMap(this);
+                Stage = STAGE_WINDOWSDOORS;
+                Property = PROPERTY_WD_DOOR;
+                Debug.Log("Rect " + selectionScript.rect);
             }
 
         }
@@ -420,13 +441,16 @@ public abstract class BuildableRoom : Buildable
 
     public DWall getWall(int x, int y)
     {
+        //Debug.Log("Get Wall " + x + "," + y);
         foreach (DWall wall in walls)
         {
+            //Debug.Log("Wall " + wall.position);
             if (wall.position.x == x && wall.position.y == y)
             {
                 return wall;
             }
         }
+        //Debug.LogError("Couldn't Find Wall " + x + "," + y);
         return null;
     }
 
@@ -439,8 +463,6 @@ public abstract class BuildableRoom : Buildable
                 return door;
             }
         }
-
-        Debug.Log("Unknown Door at " + x + " " + y);
         return null;
     }
 

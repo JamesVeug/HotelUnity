@@ -45,6 +45,7 @@ public class TileMap : MonoBehaviour
     };
 
 
+    public GameObject blueprintCornerWallPrefab;
     public GameObject blueprintWallPrefab;
     public GameObject blueprintDoorPrefab;
     public GameObject blueprintWindowPrefab;
@@ -106,20 +107,29 @@ public class TileMap : MonoBehaviour
                 if ( map.hasWall(x, y) )
                 {
                     DWall wall = map.getWall(x, y);
-                    if( wall == null){Debug.LogError("No Wall at position " + x + "," + y);}
-                    buildWall(wall);
+                    if( wall == null){Debug.LogError("No Wall at position " + x + "," + y); }
+                    if (wall.gameObject == null)
+                    {
+                        buildWall(wall);
+                    }
                 }
                 else if (map.hasDoor(x, y))
                 {
                     DDoor door = map.getDoor(x, y);
                     if (door == null) { Debug.LogError("No door at position " + x + "," + y); }
-                    buildDoor(door);
+                    if (door.gameObject == null)
+                    {
+                        buildDoor(door);
+                    }
                 }
                 else if (map.hasWindow(x, y))
                 {
                     DWindow window = map.getWindow(x, y);
                     if (window == null) { Debug.LogError("No window at position " + x + "," + y); }
-                    buildWindow(window);
+                    if (window.gameObject == null)
+                    {
+                        buildWindow(window);
+                    }
                 }
 
                 // Items are different to walls
@@ -127,7 +137,6 @@ public class TileMap : MonoBehaviour
                 {
                     BuildableItem item = map.getItem(x, y);
                     if (item == null) { Debug.LogError("No item at position " + x + "," + y); }
-                    //Debug.Log("Placed Item at " + x + "," + y);
                     buildItem(item);
                 }
                 else if( builtObjects.ContainsKey(c) )
@@ -144,7 +153,9 @@ public class TileMap : MonoBehaviour
         // STYLE Selection box
         if (selectionScript.isModified())
         {
-            if (selectionScript.getBuildable() is BuildableRoom) {
+            if (selectionScript.getBuildable() is BuildableRoom)
+            {
+                Transform selectionCube = selectionScript.transform;
                 BuildableRoom build = (BuildableRoom)selectionScript.getBuildable();
                 int stage = build.getStage();
                 string property = build.getProperty();
@@ -152,6 +163,12 @@ public class TileMap : MonoBehaviour
                 // Selection cube has changed. We need to style it
                 if (stage == BuildableRoom.STAGE_BLUEPRINT )
                 {
+                    Transform bPParent = selectionCube.FindChild("Blueprints");
+                    if (bPParent != null)
+                    {
+                        Destroy(selectionCube.FindChild("Blueprints").gameObject);
+                    }
+
                     //Transform selectionCube = selectionScript.transform.GetChild(0);
                     if (property == BuildableRoom.PROPERTY_BP_CREATE)
                     {
@@ -170,7 +187,6 @@ public class TileMap : MonoBehaviour
                 }
                 else if(stage == BuildableRoom.STAGE_WINDOWSDOORS)
                 {
-                    Transform selectionCube = selectionScript.transform;
 
 
 
@@ -178,14 +194,17 @@ public class TileMap : MonoBehaviour
                     GameObject o = null;
                     if (bPParent == null)
                     {
+                        Debug.Log("Create new Parent");
                         o = new GameObject();
                         o.transform.parent = selectionCube;
                         o.name = "Blueprints";
                     }
                     else
                     {
+                        Debug.Log("Use old Parent");
                         o = bPParent.gameObject;
                     }
+                    //o.transform.position = Vector3.zero;
 
 
                     // If we just changed to this Stage. Build the meshes
@@ -193,49 +212,73 @@ public class TileMap : MonoBehaviour
                     {
                         // We are now changing the windows and doors
                         // Show each wall
-                        
-                        // Create new walls
-                        Vector3 position = selectionScript.rect.position;
-                        for (int x = 0; x < selectionScript.rect.width; x++)
-                        {
-                            for (int y = 0; y <= 1; y++)
-                            {
-                                Vector3 newPos = new Vector3(x, 0, y * (selectionScript.rect.height - 1));
-                                GameObject bpWall = (GameObject)Instantiate(blueprintWallPrefab);
-                                bpWall.transform.position = position + newPos;
-                                bpWall.transform.parent = o.transform;
-                                bpWall.name = "BPWall" + newPos.x + "," + newPos.z;
-                                rotateByBounds(bpWall, selectionScript.rect);
-                            }
-                        }
-                        for (int y = 0; y < selectionScript.rect.height; y++)
-                        {
-                            for (int x = 0; x <= 1; x++)
-                            {
-                                Vector3 newPos = new Vector3(x * (selectionScript.rect.width - 1), 0, y);
-                                GameObject bpWall = (GameObject)Instantiate(blueprintWallPrefab);
-                                bpWall.transform.position = position + newPos;
-                                bpWall.transform.parent = o.transform;
-                                bpWall.name = "BPWall" + newPos.x + "," + newPos.z;
-                                rotateByBounds(bpWall, selectionScript.rect);
-                            }
-                        }
 
-                        // Corners // HACK HACK HACK HACK
-                        // Top Left
-                        for (int y = 0; y <= 1; y++)
+                        // If we don't have any walls already. Make them
+                        if (selectionScript.walls.Count == 0)
                         {
-                            for (int x = 0; x <= 1; x++)
+                            Debug.Log("Create new Set of walls");
+                            for (int i = 1; i < selectionScript.rect.width-1; i++)
                             {
-                                Vector3 newPos = new Vector3(x * (selectionScript.rect.width - 1), 0, y * (selectionScript.rect.height - 1));
-                                GameObject bpWall = (GameObject)Instantiate(blueprintWallPrefab);
-                                bpWall.transform.position = position + newPos;
-                                bpWall.transform.parent = o.transform;
-                                bpWall.name = "BPWallCorner" + newPos.x + "," + newPos.z;
-                                if ( y == 1)
+                                for (int j = 0; j <= 1; j++)
                                 {
-                                    bpWall.transform.GetChild(0).rotation = Quaternion.Euler(new Vector3(0, 180, 0));
+                                    int x = selectionScript.rect.left + i;
+                                    int y = selectionScript.rect.top + j * (selectionScript.rect.height - 1);
+                                    Navigation.Direction dir = j == 0 ? Navigation.Direction.South : Navigation.Direction.North;
+                                    buildWallBluePrint(x, y, selectionScript.rect, o.transform, dir);
                                 }
+                            }
+                            for (int j = 1; j < selectionScript.rect.height-1; j++)
+                            {
+                                for (int i = 0; i <= 1; i++)
+                                {
+                                    int x = selectionScript.rect.left + i * (selectionScript.rect.width - 1);
+                                    int y = selectionScript.rect.top + j;
+                                    Navigation.Direction dir = i == 0 ? Navigation.Direction.West : Navigation.Direction.East;
+                                    buildWallBluePrint(x, y, selectionScript.rect, o.transform, dir);
+                                }
+                            }
+                            // Corners
+                            for (int j = 0; j <= 1; j++)
+                            {
+                                for (int i = 0; i <= 1; i++)
+                                {
+                                    int x = selectionScript.rect.left + i * (selectionScript.rect.width - 1);
+                                    int y = selectionScript.rect.top  + j * (selectionScript.rect.height - 1);
+                                    Navigation.Direction dir = i == 0 ? Navigation.Direction.West : Navigation.Direction.East;
+                                    buildWallBluePrint(x, y, selectionScript.rect, o.transform, dir);
+                                }
+                            }
+                        }
+                        else
+                        {
+                            Debug.Log("Remake Walls");
+                            // We already have walls/doors/windows. Make them
+                            // Walls
+                            foreach(DWall wall in selectionScript.walls)
+                            {
+                                buildWallBluePrint((int)wall.position.x, (int)wall.position.y, selectionScript.rect, o.transform, wall.facingDirection);
+                                GameObject oldWall = wall.gameObject;
+                                Debug.Log("Wall " + oldWall);
+                                wall.gameObject = null;
+                                DestroyImmediate(oldWall);
+                                Debug.Log("Wall " + oldWall);
+                                Debug.Log("Wall " + wall.gameObject);
+                            }
+                            // Doors
+                            foreach (DDoor door in selectionScript.doors)
+                            {
+                                buildDoorBluePrint((int)door.position.x, (int)door.position.y, selectionScript.rect, o.transform, door.facingDirection);
+                                GameObject oldDoor = door.gameObject;
+                                door.gameObject = null;
+                                DestroyImmediate(oldDoor);
+                            }
+                            // Windows
+                            foreach (DWindow window in selectionScript.windows)
+                            {
+                                buildWindowBluePrint((int)window.position.x, (int)window.position.y, selectionScript.rect, o.transform, window.facingDirection);
+                                GameObject oldWindow = window.gameObject;
+                                window.gameObject = null;
+                                DestroyImmediate(oldWindow);
                             }
                         }
                     }
@@ -243,6 +286,7 @@ public class TileMap : MonoBehaviour
                     // Check if the door positions
                     if (selectionScript.doorsModified())
                     {
+                        Debug.Log("Doors Modified");
                         //Debug.Log("DOORS CHANGED");
                         // Get the position
                         foreach (DDoor door in build.doors)
@@ -262,17 +306,14 @@ public class TileMap : MonoBehaviour
 
 
                             // Add the door
-                            GameObject bpDoor = (GameObject)Instantiate(blueprintDoorPrefab);
-                            bpDoor.transform.position = newPos;
-                            bpDoor.transform.parent = o.transform;
-                            bpDoor.name = "BPDoor" + newPos.x + "," + newPos.z;
-                            rotateByBounds(bpDoor, selectionScript.rect);
+                            buildDoorBluePrint((int)newPos.x, (int)newPos.z, selectionScript.rect, o.transform, door.facingDirection);
                         }
                     }
 
                     // Get the position
                     if (selectionScript.windowsModified())
                     {
+                        Debug.Log("Windows Modified");
                         foreach (DWindow window in build.windows)
                         {
                             Vector3 newPos = new Vector3(window.position.x, 0, window.position.y);
@@ -302,7 +343,6 @@ public class TileMap : MonoBehaviour
                 {
                     if (selectionScript.stageModified())
                     {
-                        Transform selectionCube = selectionScript.transform;
                         Destroy(selectionCube.FindChild("Blueprints").gameObject);
                     }
                     else if( selectionScript.placedItemsModified() )
@@ -420,6 +460,52 @@ public class TileMap : MonoBehaviour
         buildTexture(mesh);
     }
 
+    private GameObject buildWallBluePrint(int x, int y, DRectangle roomBounds, Transform blueprintParent, Navigation.Direction dir)
+    {
+        Vector3 position = new Vector3(x, 0, y);
+
+        Vector3 roomPosition = position - roomBounds.position;
+        GameObject wallObject;
+        if ((roomPosition.x == 0 || roomPosition.x == (roomBounds.width - 1)) && (roomPosition.z == 0 || roomPosition.z == (roomBounds.height - 1)))
+        {
+            wallObject = (GameObject)Instantiate(blueprintCornerWallPrefab);
+            if ((roomPosition.x == 0 && roomPosition.z == 0) || (roomPosition.x == (roomBounds.width - 1) && roomPosition.z == (roomBounds.height - 1)))
+            {
+                wallObject.transform.GetChild(0).localRotation *= Quaternion.Euler(0, -90, 0);
+            }
+        }
+        else
+        {
+            wallObject = (GameObject)Instantiate(blueprintWallPrefab);
+        }
+
+        wallObject.name = wallObject.name + "(" + x + "," + y + ")";
+        wallObject.transform.parent = blueprintParent;
+        wallObject.transform.position = new Vector3(x, 0, y);
+        rotateByObject(wallObject, dir);
+        return wallObject;
+    }
+
+    private GameObject buildDoorBluePrint(int x, int y, DRectangle roomBounds, Transform blueprintParent, Navigation.Direction dir)
+    {
+        GameObject doorObject = (GameObject)Instantiate(blueprintDoorPrefab);
+        doorObject.name = doorObject.name + "(" + x + "," + y + ")";
+        doorObject.transform.parent = blueprintParent;
+        doorObject.transform.position = new Vector3(x, 0, y);
+        rotateByObject(doorObject, dir);
+        return doorObject;
+    }
+
+    private GameObject buildWindowBluePrint(int x, int y, DRectangle roomBounds, Transform blueprintParent, Navigation.Direction dir)
+    {
+        GameObject windowObject = (GameObject)Instantiate(blueprintWindowPrefab);
+        windowObject.name = windowObject.name + "(" + x + "," + y + ")";
+        windowObject.transform.parent = blueprintParent;
+        windowObject.transform.position = new Vector3(x, 0, y);
+        rotateByObject(windowObject, dir);
+        return windowObject;
+    }
+
     private void buildWall(DWall wall)
     {
         BuildableRoom room = map.getRoom((int)wall.position.x, (int)wall.position.y);
@@ -442,22 +528,22 @@ public class TileMap : MonoBehaviour
 
         wallObject.transform.position = new Vector3(wall.position.x, 0, wall.position.y);
         wall.gameObject = wallObject;
-        rotateByObject(wall);
+        rotateByObject(wall.gameObject,wall.facingDirection);
     }
 
-    private void rotateByObject(DDataObject o)
+    private void rotateByObject(GameObject o, Navigation.Direction dir)
     {
-        if( o.facingDirection == Navigation.Direction.North)
+        if(dir == Navigation.Direction.North)
         {
-            o.gameObject.transform.GetChild(0).localRotation *= Quaternion.Euler(0, 180, 0);
+            o.transform.GetChild(0).localRotation *= Quaternion.Euler(0, 180, 0);
         }
-        else if (o.facingDirection == Navigation.Direction.East)
+        else if (dir == Navigation.Direction.East)
         {
-            o.gameObject.transform.GetChild(0).localRotation *= Quaternion.Euler(0, 270, 0);
+            o.transform.GetChild(0).localRotation *= Quaternion.Euler(0, 270, 0);
         }
-        else if (o.facingDirection == Navigation.Direction.West)
+        else if (dir == Navigation.Direction.West)
         {
-            o.gameObject.transform.GetChild(0).localRotation *= Quaternion.Euler(0, 90, 0);
+            o.transform.GetChild(0).localRotation *= Quaternion.Euler(0, 90, 0);
         }
         else
         {
@@ -471,7 +557,7 @@ public class TileMap : MonoBehaviour
         windowObject.transform.position = new Vector3(window.position.x, 0, window.position.y);
 
         window.gameObject = windowObject;
-        rotateByObject(window);
+        rotateByObject(window.gameObject, window.facingDirection);
     }
 
     private void buildDoor(DDoor door)
@@ -486,7 +572,7 @@ public class TileMap : MonoBehaviour
         door.closeObject = closedChild;
 
         door.gameObject = doorObject;
-        rotateByObject(door);
+        rotateByObject(door.gameObject, door.facingDirection);
     }
 
     private void buildItem(BuildableItem item)

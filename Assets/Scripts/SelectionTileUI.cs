@@ -10,6 +10,8 @@ public class SelectionTileUI : MonoBehaviour {
     public Text itemText;
     public Text mapText;
     public Text guestInfo;
+    public Text soldBedText;
+    public Text rejectedText;
     public Image currentMouseImage;
     public Sprite rotateImage;
     public Sprite IconImage;
@@ -30,13 +32,16 @@ public class SelectionTileUI : MonoBehaviour {
 	// Update is called once per frame
 	void LateUpdate () {
         Buildable buildable = selectionScript.getBuildable();
+        soldBedText.text  = "" + data.gameLogic.soldBeds;
+        rejectedText.text = "" + data.gameLogic.rejectedPeople;
         roomText.text =     "" + buildable.GetType().Name;
         stageText.text =    "" + buildable.getStage();
         propertyText.text = "" + buildable.getProperty();
         itemText.text =     "";
         if (buildable is BuildableRoom)
         {
-            itemText.text += ((BuildableRoom)buildable).getCurrentBuildingItem();
+            BuildableItem item = ((BuildableRoom)buildable).getCurrentBuildingItem();
+            itemText.text += item == null ? "-" : item.GetType().Name;
         }
         else if (buildable is BuildableTile)
         {

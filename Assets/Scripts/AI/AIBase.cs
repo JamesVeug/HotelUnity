@@ -209,7 +209,7 @@ public abstract class AIBase : MonoBehaviour
 
             if ((path[pathIndex]-new Vector3(7.5f, 0.0f, 22.5f)).magnitude < 0.1f)
             {
-                Debug.Log("========= North Door");
+                //Debug.Log("========= North Door");
             }
 
             if ( blockedByDoor(path[pathIndex-1], path[pathIndex]) )

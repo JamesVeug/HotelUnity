@@ -5,6 +5,9 @@ using System;
 
 public class GameLogic : MonoBehaviour {
 
+    public int soldBeds = 0;
+    public int rejectedPeople = 0;
+
     public float aiSpawnFrequency = 0.5f;
     public StaffAI staffAI;
     public GuestAI AIToSpawn;

@@ -14,14 +14,17 @@ public class SelectionTile : MonoBehaviour {
     private Buildable builder;
     private int builderStage = 0;
     private string builderProperty = "";
+    private bool builderIsModified = false;
     private bool buildStageChanged = false;
     private bool buildPropertyChanged = false;
     private bool buildDoorsChanged = false;
     private bool buildWindowsChanged = false;
+    private bool buildWallsChanged = false;
     private bool placedItemsChanged = false;
-    private List<DDoor> doorPositions = new List<DDoor>();
-    private List<DWindow> windowPositions = new List<DWindow>();
-    private List<BuildableItem> placedItems = new List<BuildableItem>();
+    public List<DDoor> doors = new List<DDoor>();
+    public List<DWindow> windows = new List<DWindow>();
+    public List<DWall> walls = new List<DWall>();
+    public List<BuildableItem> placedItems = new List<BuildableItem>();
 
     public DRectangle rect;
     private GameData data;
@@ -40,6 +43,10 @@ public class SelectionTile : MonoBehaviour {
 	// Update is called once per frame
 	void LateUpdate ()
     {
+
+        // Move Modified into this method
+        // This is not being called before DTileMap!!!
+        builderIsModified = calculationModified();
 
 
         /*Vector3 asignedPosition = new Vector3(
@@ -267,8 +274,9 @@ public class SelectionTile : MonoBehaviour {
         this.builder = b;
         this.builderStage = b.getStage();
         this.builderProperty = b.getProperty();
-        doorPositions.Clear();
-        windowPositions.Clear();
+        doors.Clear();
+        windows.Clear();
+        walls.Clear();
 
         if (tilesSelectionObjects.Count > 0)
         {
@@ -287,22 +295,23 @@ public class SelectionTile : MonoBehaviour {
         Debug.Log("Map -> " + FindObjectOfType<TileMapMouse>());
     }
 
-    public bool isModified()
+    public bool calculationModified()
     {
         // Record what has changed 
         //Debug.Log(builder);
         buildStageChanged = this.builderStage != builder.getStage();
         buildPropertyChanged = this.builderProperty != builder.getProperty();
         bool roomChanged = false;
-        if (builder is BuildableRoom){
+        if (builder is BuildableRoom)
+        {
             roomChanged = checkRoomChanged();
         }
-        else if ( builder is BuildableTile)
+        else if (builder is BuildableTile)
         {
             roomChanged = checkTileChanged();
         }
 
-        if ( buildPropertyChanged || buildStageChanged || roomChanged)
+        if (buildPropertyChanged || buildStageChanged || roomChanged)
         {
             // Record changes and tell the graphics that we have changed
             this.builderStage = builder.getStage();
@@ -312,6 +321,11 @@ public class SelectionTile : MonoBehaviour {
 
         // No Change
         return false;
+    }
+
+    public bool isModified()
+    {
+        return builderIsModified;
     }
 
     public bool checkTileChanged()
@@ -335,10 +349,10 @@ public class SelectionTile : MonoBehaviour {
         bool changed = false;
 
         // Doors
-        if (!containsAll(this.doorPositions, room.doors))
+        if (!containsAll(this.doors, room.doors))
         {
-            this.doorPositions.Clear();
-            this.doorPositions.AddRange(room.doors);
+            this.doors.Clear();
+            this.doors.AddRange(room.doors);
             buildDoorsChanged = true;
             changed = true;
         }
@@ -349,10 +363,10 @@ public class SelectionTile : MonoBehaviour {
 
 
         // Windows
-        if (!containsAll(this.windowPositions, room.windows))
+        if (!containsAll(this.windows, room.windows))
         {
-            this.windowPositions.Clear();
-            this.windowPositions.AddRange(room.windows);
+            this.windows.Clear();
+            this.windows.AddRange(room.windows);
             buildWindowsChanged = true;
             changed = true;
         }
@@ -361,8 +375,21 @@ public class SelectionTile : MonoBehaviour {
             buildWindowsChanged = false;
         }
 
+        // Walls
+        if (!containsAll(this.walls, room.walls))
+        {
+            this.walls.Clear();
+            this.walls.AddRange(room.walls);
+            buildWallsChanged = true;
+            changed = true;
+        }
+        else
+        {
+            buildWallsChanged = false;
+        }
+
         // Placed items
-        if(!containsAll(placedItems, room.items))
+        if (!containsAll(placedItems, room.items))
         {
             placedItemsChanged = true;
             placedItems.Clear();
@@ -398,6 +425,11 @@ public class SelectionTile : MonoBehaviour {
         return buildWindowsChanged;
     }
 
+    public bool wallsModified()
+    {
+        return buildWallsChanged;
+    }
+
     public bool placedItemsModified()
     {
         return placedItemsChanged;
@@ -417,6 +449,13 @@ public class SelectionTile : MonoBehaviour {
                 return false;
             }
         }
+        foreach (DDoor L in a)
+        {
+            if (!b.Contains(L))
+            {
+                return false;
+            }
+        }
 
         return true;
     }
@@ -426,6 +465,33 @@ public class SelectionTile : MonoBehaviour {
         foreach (DWindow L in b)
         {
             if (!a.Contains(L))
+            {
+                return false;
+            }
+        }
+        foreach (DWindow L in a)
+        {
+            if (!b.Contains(L))
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private bool containsAll(List<DWall> a, List<DWall> b)
+    {
+        foreach (DWall L in b)
+        {
+            if (!a.Contains(L))
+            {
+                return false;
+            }
+        }
+        foreach (DWall L in a)
+        {
+            if (!b.Contains(L))
             {
                 return false;
             }

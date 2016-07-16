@@ -24,12 +24,19 @@ public class GuestAI : AIBase
         nav = data.navigation;
 
         // Randomize color
-        GameObject mesh = transform.FindChild("Body").gameObject;
+        GameObject body = transform.FindChild("Body").gameObject;
+        GameObject head = transform.FindChild("Head").gameObject;
 
-        Renderer rend = mesh.GetComponent<Renderer>();
-        rend.material.color = new Color(UnityEngine.Random.Range(0f, 1f), UnityEngine.Random.Range(0f, 1f), UnityEngine.Random.Range(0f, 1f));
+        Color bodyColor = new Color(UnityEngine.Random.Range(0f, 1f), UnityEngine.Random.Range(0f, 1f), UnityEngine.Random.Range(0f, 1f));
+
+        Renderer bodyRend = body.GetComponent<Renderer>();
+        bodyRend.material.color = bodyColor;
+
+        Renderer headRend = head.GetComponent<Renderer>();
+        headRend.material.color = bodyColor;
+
+
         id = NEXT_ID++;
-
         name = "BasicAI(" + id + ")";
 
 
@@ -90,8 +97,12 @@ public class GuestAI : AIBase
 				} else if (order is Sleep) {
 					BuildableBed bed = getOwnedBed ();
 					bed.setRoomToDirty ();
-				}
-			} else if (status == Order.RETURN_TYPE.FAILED) {
+                }
+                else if (order is BuyBed)
+                {
+                    data.gameLogic.soldBeds++;
+                }
+            } else if (status == Order.RETURN_TYPE.FAILED) {
 				if (order is BuyBed) {
 					
 					// There are no beds available
@@ -99,6 +110,7 @@ public class GuestAI : AIBase
 					orders.Clear();
 					orders.Push (ScriptableObject.CreateInstance<GoHome>());
                     property_anger = 1;
+                    data.gameLogic.rejectedPeople++;
 				}
 
 			}
