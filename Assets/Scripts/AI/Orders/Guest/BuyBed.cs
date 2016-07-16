@@ -25,6 +25,14 @@ public class BuyBed : Order
 			return RETURN_TYPE.PROBLEM;
         }
 
+        // Face desk
+        Vector3 staffPosition = new Vector3(frontDesk.getStaffPosition().x,0, frontDesk.getStaffPosition().y);
+        if ( !LookAtTile.isLookingAtTile(ai.transform,staffPosition))
+        {
+            ai.addOrder(LookAtTile.create(staffPosition));
+            return RETURN_TYPE.PROBLEM;
+        }
+
         // Need to allocate bed to player
         bool boughtRoom = ai.buyRoom();
         //Debug.Log("Bought Bed " + boughtRoom + " " + ai.getBedIndex() + " " + ai.getBedSideIndex());

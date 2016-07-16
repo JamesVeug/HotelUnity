@@ -24,11 +24,9 @@ public class CleanBed : Order {
         }
 
         // Face Bed
-        Quaternion currentRotation = staff.transform.rotation;
-        float degree = Quaternion.LookRotation((bedPosition- staff.transform.position).normalized).eulerAngles.y;
-        if (Mathf.Abs(currentRotation.eulerAngles.y - degree) > 5)
+        if( !LookAtTile.isLookingAtTile(ai.transform,bedPosition))
         {
-            staff.transform.rotation = Quaternion.Slerp(staff.transform.rotation, Quaternion.Euler(currentRotation.x,degree, currentRotation.z), Time.deltaTime*20f);
+            ai.addOrder(LookAtTile.create(bedPosition));
             return RETURN_TYPE.PROBLEM;
         }
 
