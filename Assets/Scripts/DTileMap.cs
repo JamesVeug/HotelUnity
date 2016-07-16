@@ -180,7 +180,12 @@ public class DTileMap : MonoBehaviour{
 
     public BuildableItem getItem(int x, int y)
     {
-        BuildableRoom room = getRoom(x, y);
+        // Get item from room
+        return getItem(x, y,getRoom(x,y));
+    }
+
+    public BuildableItem getItem(int x, int y, BuildableRoom room)
+    {
         if (room == null)
         {
             Debug.Log("Room does not exist " + x + "," + y);

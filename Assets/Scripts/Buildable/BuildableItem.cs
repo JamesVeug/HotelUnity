@@ -5,20 +5,42 @@ using System;
 
 public abstract class BuildableItem : Buildable, ICloneable, IEquatable<BuildableItem>
 {
+    private const string Property_Modify = "BuildtableItem_Modify";
+    private const int Stage_Modify = 0;
+
+    private int Stage = 0;
+    private string Property = Property_Modify;
+
     public Quaternion rotation = Quaternion.identity;
     protected Vector2 origin;
     protected List<Vector2> tiles = new List<Vector2>(); // All tiles related to the Object
     protected List<Vector2> itemTiles = new List<Vector2>(); // Tiles for the floor
     public GameObject gameObject;
 
+    private GameData data;
+
     public abstract DRectangle Create(int x, int y);
+
+    public void resetBuildTools()
+    {
+        Stage = Stage_Modify;
+        Property = Property_Modify;
+        if( data == null)
+        {
+            data = FindObjectOfType<GameData>();
+        }
+    }
 
     public List<Vector2> getTiles()
     {
         List<Vector2> t = new List<Vector2>();
         foreach(Vector2 tile in tiles)
         {
-            t.Add(new Vector2(tile.x + left, tile.y + top));
+            float x = tile.x + left;
+            float y = tile.y + top;
+            Vector2 position = new Vector2(x, y);
+            Vector2 rotatedPosition = Vector2Extension.Rotate(position,getOrigin(),rotation.eulerAngles.y);
+            t.Add(rotatedPosition);
         }
         return t;
     }
@@ -28,7 +50,9 @@ public abstract class BuildableItem : Buildable, ICloneable, IEquatable<Buildabl
         List<Vector2> t = new List<Vector2>();
         foreach (Vector2 tile in itemTiles)
         {
-            t.Add(new Vector2(tile.x + left, tile.y + top));
+            Vector2 position = new Vector2(tile.x + left, tile.y + top);
+            Vector2 rotatedPosition = Vector2Extension.Rotate(position, getOrigin(), rotation.eulerAngles.y);
+            t.Add(rotatedPosition);
         }
         return t;
     }
@@ -50,7 +74,11 @@ public abstract class BuildableItem : Buildable, ICloneable, IEquatable<Buildabl
 
     public override void releaseMouse(Vector3 pressedPosition, Vector3 releasePosition, MouseButton mouseButton)
     {
-        throw new NotImplementedException();
+        data.dTileMap.RemoveItem(this); 
+        rotation = rotation * Quaternion.Euler(0, 90, 0);
+
+        // Add more changes
+        data.dTileMap.AddItem(this);
     }
 
     public override void dragMouse(Vector3 pressedPosition, Vector3 dragPosition)
@@ -60,12 +88,12 @@ public abstract class BuildableItem : Buildable, ICloneable, IEquatable<Buildabl
 
     public override void applyStage()
     {
-        throw new NotImplementedException();
+        Stage++;
     }
     
     public override bool hasNextStage()
     {
-        throw new NotImplementedException();
+        return Stage == 0;
     }
 
     public override int getStage()

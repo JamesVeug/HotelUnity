@@ -18,6 +18,11 @@ public class TileMapMouse : MonoBehaviour {
     private int currentValueIndex = 0;
     private List<List<Type>> buildableTypes = new List<List<Type>>
     {
+        new List<Type> // click to select stuff
+        {
+            typeof(BuildableSelector),
+        },
+
         new List<Type>
         {
             typeof(BReceptionRoom),
@@ -44,13 +49,13 @@ public class TileMapMouse : MonoBehaviour {
     {
         tileMap = GetComponent<TileMap>();
         whatToBuild = (Buildable)ScriptableObject.CreateInstance(buildableTypes[currentTypeIndex][currentValueIndex].ToString());
-        data = FindObjectOfType<GameData>();
         selectionScript = FindObjectOfType<SelectionTile>();
         selectionScript.setBuilder(whatToBuild);
+        data = FindObjectOfType<GameData>();
     }
 
     // Update is called once per frame
-    void Update () {
+    void Update() {
 
         Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
         RaycastHit hit;
@@ -58,7 +63,7 @@ public class TileMapMouse : MonoBehaviour {
 
         Collider coll = GetComponent<Collider>();
         //Renderer rend = GetComponent<Renderer>();
-        if (coll.Raycast(ray, out hit, Mathf.Infinity)){
+        if (coll.Raycast(ray, out hit, Mathf.Infinity)) {
 
             // Save the mosues current position
             int x = Mathf.FloorToInt(hit.point.x / tileMap.tileSize);
@@ -68,7 +73,7 @@ public class TileMapMouse : MonoBehaviour {
 
 
         // Don't build if we can't!
-        if ( whatToBuild == null )
+        if (whatToBuild == null)
         {
             return;
         }
@@ -96,7 +101,7 @@ public class TileMapMouse : MonoBehaviour {
                 whatToBuild.dragMouse(clone(pressedPoint), clone(currentPoint));
             }
         }
-        else if(lastPoint != currentPoint)
+        else if (lastPoint != currentPoint)
         {
             // Move Mouse
             whatToBuild.moveMouse(clone(currentPoint));
@@ -124,8 +129,6 @@ public class TileMapMouse : MonoBehaviour {
         {
             //Debug.Log("Cancel");
             whatToBuild.cancelStage();
-            //whatToBuild = (Buildable)ScriptableObject.CreateInstance(buildableTypes[currentTypeIndex][currentValueIndex].ToString());
-            //selectionScript.setBuilder(whatToBuild);
         }
         else if (Input.GetButtonDown("SwitchValue"))
         {
@@ -162,7 +165,7 @@ public class TileMapMouse : MonoBehaviour {
                 Debug.Log("Unknown Type to switch value");
             }
         }
-        else if(Input.GetButtonDown("SwitchType"))
+        else if (Input.GetButtonDown("SwitchType"))
         {
             // Make sure we are allowed to switch the type
             if (whatToBuild is BuildableRoom)

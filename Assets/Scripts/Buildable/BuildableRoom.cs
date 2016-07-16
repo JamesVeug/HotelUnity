@@ -182,6 +182,7 @@ public abstract class BuildableRoom : Buildable
                         //Debug.Log("Clicked on item " + selectionScript.rect.position);
                         Property = PROPERTY_ITEMS_EDIT;
                         editingItem = item;
+                        editingItem.resetBuildTools();
                         break;
                     }
                 }
@@ -196,9 +197,7 @@ public abstract class BuildableRoom : Buildable
             else
             {
                 int index = items.IndexOf(editingItem);
-                items[index].rotation = editingItem.rotation * Quaternion.Euler(0, 90, 0);
-                // Add more changes
-                data.dTileMap.changes.Add(new Vector2(items[index].getOrigin().x, items[index].getOrigin().y));
+                items[index].releaseMouse(pressedPosition, releasePosition, mouseButton);
             }
         }
         //Debug.Log("Property: " + Property);

@@ -101,7 +101,7 @@ public class TileMap : MonoBehaviour
                 rend.materials = currentMaterials;
 
 
-                //Debug.Log(x + "," + y + "-> " + index + " ");
+                Debug.Log(x + "," + y + "-> " + index + " " + currentMaterials[index]);
 
                 // Wall types
                 if ( map.hasWall(x, y) )
@@ -584,7 +584,7 @@ public class TileMap : MonoBehaviour
         if (itemObject == null)
         {
             GameObject bedParent = new GameObject();
-            builtObjects.Add(item.getItemTiles()[0], bedParent);
+            builtObjects.Add(item.getOrigin(), bedParent);
             bedParent.name = name + "Parent";
             //Debug.Log("Added " + item.getItemTiles()[0]);
 

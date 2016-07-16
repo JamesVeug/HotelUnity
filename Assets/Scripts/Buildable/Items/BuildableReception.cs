@@ -28,7 +28,7 @@ public class BuildableReception : BuildableItem{
         itemTiles.Add(new Vector2(1, 1));
         itemTiles.Add(new Vector2(2, 1));
 
-        origin = tiles[1]; // TileVector to set when we want to indicate this item has changed
+        origin = new Vector2(1, 1); // TileVector to set when we want to indicate this item has changed
         
         return base.Create(x, y, 3, 3);
     }
