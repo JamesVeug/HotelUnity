@@ -47,6 +47,22 @@ public class SelectionTileUI : MonoBehaviour {
         {
             itemText.text += "Something of a tile";
         }
+        else if (buildable is BuildableSelector)
+        {
+            string message = "Nothing Selected";
+            BuildableRoom room = ((BuildableSelector)buildable).selectedRoom;
+            if (room != null)
+            {
+                message = room.GetType().Name;
+                BuildableItem item = ((BuildableSelector)buildable).selectedItem;
+                if (item != null)
+                {
+                    message += "->" + item.GetType().Name;
+                }
+            }
+            itemText.text = message;
+            
+        }
 
         // Map Text
         string text = "";

@@ -27,18 +27,20 @@ public class BuildableSelector : Buildable
 
     public override void cancelStage()
     {
-        throw new NotImplementedException();
+        if( selectedItem != null)
+        {
+            selectedItem.cancelStage();
+            selectedItem = null;
+        }
+        else if (selectedRoom != null)
+        {
+            selectedRoom.cancelStage();
+        }
     }
 
     public override bool canBeBuilt()
     {
         return true;
-    }
-
-    public override void dragMouse(Vector3 pressedPosition, Vector3 dragPosition)
-    {
-        //throw new NotImplementedException();
-        //changedTile = new Vector2(dragPosition.x, dragPosition.z);
     }
 
     public override string getProperty()
@@ -71,6 +73,14 @@ public class BuildableSelector : Buildable
         return true;
     }
 
+    public override void dragMouse(Vector3 pressedPosition, Vector3 dragPosition)
+    {
+        if (selectedItem != null)
+        {
+            selectedItem.dragMouse(pressedPosition, dragPosition);
+        }
+    }
+
     public override void moveMouse(Vector3 movePosition)
     {
         
@@ -78,30 +88,46 @@ public class BuildableSelector : Buildable
 
     public override void pressMouse(Vector3 pressPosition, MouseButton mouseButton)
     {
+        if( selectedItem != null)
+        {
+            selectedItem.pressMouse(pressPosition, mouseButton);
+        }
+    }
+
+    public override void releaseMouse(Vector3 pressedPosition, Vector3 releasePosition, MouseButton mouseButton)
+    {
         // Have we selected a item
-        if(selectedItem != null)
+        if (selectedItem != null)
         {
             // Did we press the item?
-            if(selectedItem.contains(pressPosition))
+            if (selectedItem.contains(releasePosition))
             {
                 // Run press on that item
-                selectedItem.pressMouse(pressPosition, mouseButton);
+                selectedItem.releaseMouse(pressedPosition, releasePosition, mouseButton);
                 return;
+            }
+            else
+            {
+                // Deselect Item
+                selectedItem = null;
             }
 
         }
 
         // Have we already selected a room?
-        if( selectedRoom != null ){
+        if (selectedRoom != null)
+        {
 
             // Did we click inside room
-            if( selectedRoom.contains(pressPosition))
+            if (selectedRoom.contains(pressedPosition))
             {
                 // Look for item in the room
-                BuildableItem item = data.dTileMap.getItem((int)pressPosition.x, (int)pressPosition.z, selectedRoom);
-                if( item != null ){
+                BuildableItem item = data.dTileMap.getItem((int)pressedPosition.x, (int)pressedPosition.z, selectedRoom);
+                if (item != null)
+                {
                     Debug.Log("Selected Item");
                     selectedItem = item;
+                    selectedItem.resetBuildTools();
                     return;
                 }
             }
@@ -114,21 +140,9 @@ public class BuildableSelector : Buildable
 
 
         // Look for room
-        BuildableRoom room = data.dTileMap.getRoom((int)pressPosition.x, (int)pressPosition.z);
+        BuildableRoom room = data.dTileMap.getRoom((int)pressedPosition.x, (int)pressedPosition.z);
         selectedRoom = room;
         Debug.Log("Room -> " + room);
-
-        // Got room
-        // Look for item in room
-        
-
-    }
-
-    public override void releaseMouse(Vector3 pressedPosition, Vector3 releasePosition, MouseButton mouseButton)
-    {
-        //Debug.Log("Release");
-
-        //throw new NotImplementedException();
     }
 
     public override void switchValue()

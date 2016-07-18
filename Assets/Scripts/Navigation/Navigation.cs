@@ -38,6 +38,56 @@ public class Navigation : ScriptableObject{
         return closestRoom;
     }
 
+    public BReceptionRoom getNearestEmptyFrontDeskRoom(AIBase ai)
+    {
+        List<BReceptionRoom> rooms = data.dTileMap.getReceptionRooms();
+
+        float tileSize = data.graphicsMap.tileSize;
+        Vector2 aiPosition = new Vector2(Mathf.Floor(ai.transform.position.x / tileSize), Mathf.Floor(ai.transform.position.z / tileSize));
+        float minDistance = float.MaxValue;
+        BReceptionRoom closestRoom = null;
+        foreach (BReceptionRoom r in rooms)
+        {
+            // Check if this room has an empty Desk
+            for(int i = 0; i < r.frontdesks.Count; i++)
+            {
+                if( r.getReceptionist(i) == null)
+                {
+                    // Find the closest door to the player
+                    foreach (DDoor d in r.doors)
+                    {
+                        float distance = (aiPosition - d.position).magnitude;
+                        if (distance < minDistance)
+                        {
+                            closestRoom = r;
+                            minDistance = distance;
+                        }
+                    }
+                }
+            }
+        }
+
+        /*BuildableReception closestFrontDesk = null;
+        // Check if this room has an empty Desk
+        for (int i = 0; i < closestRoom.frontdesks.Count; i++)
+        {
+            if (closestRoom.getReceptionist(i) == null)
+            {
+                BuildableReception frontDesk = closestRoom.frontdesks[i];
+                Vector2 deskPosition = new Vector2(frontDesk.position.x, frontDesk.position.z);
+                float distance = (aiPosition - deskPosition).magnitude;
+                if (distance < minDistance)
+                {
+                    closestFrontDesk = frontDesk;
+                    minDistance = distance;
+                }
+            }
+        }*/
+
+        // Return closest room according to the doors
+        return closestRoom;
+    }
+
     public BHouseKeepingRoom getNearestHouseKeepingRoom(AIBase ai)
     {
         List<BHouseKeepingRoom> rooms = data.dTileMap.getHouseKeepingRooms();

@@ -9,7 +9,8 @@ public class GameLogic : MonoBehaviour {
     public int rejectedPeople = 0;
 
     public float aiSpawnFrequency = 0.5f;
-    public StaffAI staffAI;
+    public MaidAI maidAI;
+    public ReceptionistAI receptionistAI;
     public GuestAI AIToSpawn;
 
     private bool initialized;
@@ -52,14 +53,20 @@ public class GameLogic : MonoBehaviour {
         }
     }
 
-    public StaffAI addHouseKeeper(Vector3 position)
+    public MaidAI addHouseKeeper(Vector3 position)
     {
-        StaffAI ai = Instantiate(staffAI);
+        MaidAI ai = Instantiate(maidAI);
         ai.transform.position = new Vector3(position.x, 0, position.z);
-        //ai.targetPosition = new Vector3(target.x, 0, target.y);
-
         spawnedStaffAI.Add(ai);
-        return staffAI;
+        return ai;
+    }
+
+    public ReceptionistAI addReceptionist(Vector3 position)
+    {
+        ReceptionistAI ai = Instantiate(receptionistAI);
+        ai.transform.position = new Vector3(position.x, 0, position.z);
+        spawnedStaffAI.Add(ai);
+        return ai;
     }
 
     public void initialize()

@@ -39,7 +39,8 @@ public class TileMapMouse : MonoBehaviour {
 
         new List<Type>
         {
-            typeof(BuildableStaff)
+            typeof(BuildableMaid),
+            typeof(BuildableReceptionist)
         },
     };
 
@@ -159,6 +160,16 @@ public class TileMapMouse : MonoBehaviour {
                 BuildableTile bTile = (BuildableTile)whatToBuild;
                 bTile.setMaxValue(data.dTileMap.maxTileTypes()-1);
                 bTile.switchValue();
+            }
+            else if (whatToBuild is BuildableStaff)
+            {
+                currentValueIndex++;
+                if (currentValueIndex >= buildableTypes[currentTypeIndex].Count)
+                {
+                    currentValueIndex = 0;
+                }
+                whatToBuild = (Buildable)ScriptableObject.CreateInstance(buildableTypes[currentTypeIndex][currentValueIndex].ToString());
+                selectionScript.setBuilder(whatToBuild);
             }
             else
             {

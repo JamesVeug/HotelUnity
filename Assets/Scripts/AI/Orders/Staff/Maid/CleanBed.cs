@@ -5,7 +5,7 @@ public class CleanBed : Order {
 
 	public override RETURN_TYPE executeOrder(AIBase ai, Navigation nav)
     {
-        StaffAI staff = (StaffAI)ai;
+        MaidAI staff = (MaidAI)ai;
 
 
         // Walk to bed

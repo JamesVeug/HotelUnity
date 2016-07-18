@@ -244,6 +244,26 @@ public class DTileMap : MonoBehaviour{
         roomBeingConstructed = null;
     }
 
+    public void RemoveRoom(BuildableRoom room)
+    {
+        if (room is BReceptionRoom)
+        {
+            receptionRooms.Remove((BReceptionRoom)room);
+        }
+        if (room is BHouseKeepingRoom)
+        {
+            houseKeepingRooms.Remove((BHouseKeepingRoom)room);
+        }
+
+        // Bedroom Types
+        if (room is BBedroom)
+        {
+            bedRooms.Remove((BBedroom)room);
+        }
+
+        rooms.Remove(room);
+    }
+
     public void AddItem(BuildableItem item)
     {
         var requiredTiles = item.getItemTiles();
@@ -255,12 +275,43 @@ public class DTileMap : MonoBehaviour{
 
     public void RemoveItem(BuildableItem item)
     {
+        // Remove from room
+        BuildableRoom room = getRoom(item.left, item.top);
+        if (room != null)
+        {
+            room.items.Remove(item);
+        }
+
+
+        // Remove off board
         var requiredTiles = item.getItemTiles();
         foreach (Vector2 tile in requiredTiles)
         {
             tiles[(int)(tile.y * width + tile.x)].item = false;
             addChange(new Vector2((int)tile.x, (int)tile.y));
         }
+    }
+
+    // Check if we can place this item on the board
+    public bool CanPlaceItem(BuildableItem item, Vector2 position)
+    {
+        Debug.Log("Position " + position);
+        var requiredTiles = item.getItemTiles();
+        foreach (Vector2 tile in requiredTiles)
+        {
+            Vector2 newPosition = tile;
+            newPosition.x -= item.left + position.x;
+            newPosition.y -= item.top + position.y;
+            Debug.Log("Old Position " + tile);
+            Debug.Log("New Position " + newPosition);
+
+            if (tiles[(int)(position.y * width + position.x)].item == true )
+            {
+                // Already got an item here
+                return false;
+            }
+        }
+        return true;
     }
 
     public int maxTileTypes()

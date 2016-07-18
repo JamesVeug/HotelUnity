@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System;
 
-public class BuildableStaff : Buildable
+public abstract class BuildableStaff : Buildable
 {
     public static string PROPERTY = "BuildableTile_Property";
     public static int STAGE = 0;
@@ -69,9 +69,12 @@ public class BuildableStaff : Buildable
         if (!initialized) initialize();
 
 		if (selectionScript.isValid ()) {
-			data.gameLogic.addHouseKeeper (pressPosition);
+            //data.gameLogic.addHouseKeeper (pressPosition);
+            createAI(pressPosition);
 		}
     }
+
+    
 
     public override void releaseMouse(Vector3 pressedPosition, Vector3 releasePosition, MouseButton mouseButton)
     {
@@ -94,4 +97,6 @@ public class BuildableStaff : Buildable
     {
         maxValue = v;
     }
+
+    public abstract void createAI(Vector3 position);
 }

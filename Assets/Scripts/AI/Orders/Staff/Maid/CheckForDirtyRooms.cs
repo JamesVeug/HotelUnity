@@ -13,9 +13,9 @@ public class CheckForDirtyRooms : Order {
         }
 
         // Need to allocate room to the staff
-        if( ai is StaffAI)
+        if( ai is MaidAI)
         {
-            StaffAI staff = (StaffAI)ai;
+            MaidAI staff = (MaidAI)ai;
             return toReturnType(staff.assignDirtyRoom());
         }
 

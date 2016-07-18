@@ -5,13 +5,38 @@ using UnityEngine;
 public class BReceptionRoom : BuildableRoom{
 
     public List<BuildableReception> frontdesks = new List<BuildableReception>();
+    protected Dictionary<int, AIBase> receptionists = new Dictionary<int, AIBase>();
 
     public List<Type> placeableItems = new List<Type>
     {
         typeof(BuildableReception)
     };
 
+    public BuildableReception assignReceptionist(ReceptionistAI ai)
+    {
+        for(int i = 0; i < frontdesks.Count; i++)
+        {
+            if( !receptionists.ContainsKey(i))
+            {
+                receptionists.Add(i, ai);
+                return frontdesks[i];
+            }
+        }
 
+        return null;
+    }
+
+    public AIBase getReceptionist(int index)
+    {
+        if (receptionists.ContainsKey(index))
+        {
+            return receptionists[index];
+        }
+        else
+        {
+            return null;
+        }
+    }
 
     public Dictionary<Type, int> requiredItems = new Dictionary<Type, int>
     {
@@ -26,6 +51,16 @@ public class BReceptionRoom : BuildableRoom{
     public override List<Type> getPlaceableItems()
     {
         return placeableItems;
+    }
+
+    public override void RemoveItem(BuildableItem item)
+    {
+        base.RemoveItem(item);
+        if (item is BuildableReception)
+        {
+            frontdesks.Remove((BuildableReception)item);
+        }
+
     }
 
     public override Dictionary<Type, int> getRequiredItems()

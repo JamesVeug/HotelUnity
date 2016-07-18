@@ -421,6 +421,10 @@ public abstract class BuildableRoom : Buildable
             items.Remove(items[index]);
             Property = PROPERTY_ITEMS_PLACE;
         }
+        else
+        {
+            Debug.Log("Unknown Stage " + Stage + " and property " + Property);
+        }
     }
 
     public override int getStage()
@@ -560,6 +564,11 @@ public abstract class BuildableRoom : Buildable
         }
 
         return true;
+    }
+
+    public virtual void RemoveItem(BuildableItem item)
+    {
+        items.Remove(item);
     }
 
     public override int GetHashCode()

@@ -16,7 +16,7 @@ public class CloseDoor : Order {
         if (!isOpen)
         {
             if (ai is GuestAI) ((GuestAI)ai).Update();
-            if (ai is StaffAI) ((StaffAI)ai).Update();
+            if (ai is MaidAI) ((MaidAI)ai).Update();
         }
 
         return RETURN_TYPE.COMPLETED;

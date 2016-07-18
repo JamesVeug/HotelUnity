@@ -69,21 +69,32 @@ public abstract class BuildableItem : Buildable, ICloneable, IEquatable<Buildabl
 
     public override void pressMouse(Vector3 pressPosition, MouseButton mouseButton)
     {
-        throw new NotImplementedException();
+        //throw new NotImplementedException();
     }
 
     public override void releaseMouse(Vector3 pressedPosition, Vector3 releasePosition, MouseButton mouseButton)
     {
-        data.dTileMap.RemoveItem(this); 
-        rotation = rotation * Quaternion.Euler(0, 90, 0);
+        if (pressedPosition.Equals(releasePosition))
+        {
+            data.dTileMap.RemoveItem(this);
+            rotation = rotation * Quaternion.Euler(0, 90, 0);
 
-        // Add more changes
-        data.dTileMap.AddItem(this);
+            // Add more changes
+            data.dTileMap.AddItem(this);
+        }
     }
 
     public override void dragMouse(Vector3 pressedPosition, Vector3 dragPosition)
     {
-        throw new NotImplementedException();
+        //throw new NotImplementedException();
+        if( data.dTileMap.CanPlaceItem(this,new Vector2(dragPosition.x, dragPosition.z)) )
+        {
+
+            data.dTileMap.RemoveItem(this);
+            this.left = (int)dragPosition.x;
+            this.top = (int)dragPosition.z;
+            data.dTileMap.AddItem(this);
+        }
     }
 
     public override void applyStage()
@@ -98,12 +109,12 @@ public abstract class BuildableItem : Buildable, ICloneable, IEquatable<Buildabl
 
     public override int getStage()
     {
-        throw new NotImplementedException();
+        return Stage;
     }
 
     public override string getProperty()
     {
-        throw new NotImplementedException();
+        return Property;
     }
 
     public override void switchValue()
@@ -113,7 +124,8 @@ public abstract class BuildableItem : Buildable, ICloneable, IEquatable<Buildabl
 
     public override void cancelStage()
     {
-        throw new NotImplementedException();
+
+        data.dTileMap.RemoveItem(this);
     }
 
     public object Clone()

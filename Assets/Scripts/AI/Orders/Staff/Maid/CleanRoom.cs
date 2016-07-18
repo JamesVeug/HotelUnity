@@ -15,7 +15,7 @@ public class CleanRoom : Order {
             return RETURN_TYPE.FAILED;
         }
 
-        StaffAI staff = (StaffAI)ai;
+        MaidAI staff = (MaidAI)ai;
         
 
         // Make sure we have a room to clean
@@ -73,7 +73,7 @@ public class CleanRoom : Order {
         return RETURN_TYPE.COMPLETED;
     }
 
-    private int getClosestBedIndex(StaffAI staff)
+    private int getClosestBedIndex(MaidAI staff)
     {
         float distance = float.MaxValue;
         int index = 0;

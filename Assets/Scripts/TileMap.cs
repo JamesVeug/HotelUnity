@@ -101,7 +101,7 @@ public class TileMap : MonoBehaviour
                 rend.materials = currentMaterials;
 
 
-                Debug.Log(x + "," + y + "-> " + index + " " + currentMaterials[index]);
+                //Debug.Log(x + "," + y + "-> " + index + " " + currentMaterials[index]);
 
                 // Wall types
                 if ( map.hasWall(x, y) )
