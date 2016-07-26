@@ -12,12 +12,15 @@ public class SelectionTileUI : MonoBehaviour {
     public Text guestInfo;
     public Text soldBedText;
     public Text rejectedText;
+    public Text goldText;
+    public GameObject subChangeGoldTextPrefab;
+    public GameObject addChangeGoldTextPrefab;
     public Image currentMouseImage;
     public Sprite rotateImage;
     public Sprite IconImage;
 
     private GameData data;
-
+    private Gold visibleGold;
 
     void Awake()
     {
@@ -27,13 +30,37 @@ public class SelectionTileUI : MonoBehaviour {
     // Use this for initialization
     void Start () {
         data = FindObjectOfType<GameData>();
-	}
+        visibleGold = Gold.create(0);
+
+    }
 	
 	// Update is called once per frame
 	void LateUpdate () {
         Buildable buildable = selectionScript.getBuildable();
         soldBedText.text  = "" + data.gameLogic.soldBeds;
         rejectedText.text = "" + data.gameLogic.rejectedPeople;
+        if(!goldText.text.Equals(data.gameLogic.getGold())){
+            Gold gameGold = data.gameLogic.getGold();
+            if (visibleGold < gameGold )
+            {
+                // Gained Money
+                GameObject o = Instantiate(addChangeGoldTextPrefab);
+                o.transform.position = goldText.transform.position;
+                o.transform.SetParent(FindObjectOfType<Canvas>().transform);
+                o.GetComponent<Text>().text = "+" + (gameGold - visibleGold).amount;
+            }
+            if (visibleGold > gameGold)
+            {
+                // Lost Money
+                GameObject o = Instantiate(subChangeGoldTextPrefab);
+                o.transform.position = goldText.transform.position;
+                o.transform.SetParent(FindObjectOfType<Canvas>().transform);
+                o.GetComponent<Text>().text = "-" + (gameGold - visibleGold).amount;
+            }
+            visibleGold.amount = gameGold.amount;
+            goldText.text = "" + visibleGold;
+        }
+        
         roomText.text =     "" + buildable.GetType().Name;
         stageText.text =    "" + buildable.getStage();
         propertyText.text = "" + buildable.getProperty();

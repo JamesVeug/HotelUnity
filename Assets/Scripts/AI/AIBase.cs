@@ -38,6 +38,9 @@ public abstract class AIBase : MonoBehaviour
     public float property_sleep = 0;
     public float property_anger = 0;
 
+    // Money that the People have in their pockets
+    public Gold gold = null;
+
 
     public void walkToItem(Vector3 pos)
     {

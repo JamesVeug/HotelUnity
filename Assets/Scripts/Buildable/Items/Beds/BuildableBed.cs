@@ -20,8 +20,10 @@ public abstract class BuildableBed : BuildableItem, Interactable{
         return soldToGuest;
     }
 
+
     public abstract Vector2 getBedPosition(int bedSideIndex);
     public abstract int getMaxBedPositions();
+    public abstract Gold purphaseCost();
 
     public void setRoomToDirty()
     {

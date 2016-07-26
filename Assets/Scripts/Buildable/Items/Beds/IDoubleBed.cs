@@ -3,7 +3,9 @@ using System.Collections;
 using System;
 using System.Collections.Generic;
 
-public class IDoubleBed : BuildableBed{
+public class IDoubleBed : BuildableBed
+{
+    private Gold cost = Gold.create(100);
 
     public override DRectangle Create(int x, int y)
     {
@@ -57,5 +59,10 @@ public class IDoubleBed : BuildableBed{
     public override int getMaxBedPositions()
     {
         return 2;
+    }
+
+    public override Gold purphaseCost()
+    {
+        return cost;
     }
 }

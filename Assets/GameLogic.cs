@@ -8,6 +8,8 @@ public class GameLogic : MonoBehaviour {
     public int soldBeds = 0;
     public int rejectedPeople = 0;
 
+    public Gold currentMoney;
+
     public float aiSpawnFrequency = 0.5f;
     public MaidAI maidAI;
     public ReceptionistAI receptionistAI;
@@ -26,8 +28,12 @@ public class GameLogic : MonoBehaviour {
 	void Start () {
         name = "GameLogic";
         data = GameObject.FindObjectOfType<GameData>();
-        spawnTime = Time.time + 0.05f;
-	}
+        spawnTime = Time.time + 1;
+        currentMoney = Gold.create(1000);
+        spawnedStaffAI = new List<StaffAI>();
+        spawnedAI = new List<GuestAI>();
+
+    }
 	
 	// Update is called once per frame
 	void Update () {
@@ -47,10 +53,27 @@ public class GameLogic : MonoBehaviour {
             GuestAI ai = Instantiate(AIToSpawn);
             ai.transform.position = new Vector3(spawn.x, 0, spawn.y);
             //ai.targetPosition = new Vector3(target.x, 0, target.y);
-
+            
             spawnedAI.Add(ai);
             spawnTime = Time.time;
         }
+    }
+
+    public Gold getGold()
+    {
+        return currentMoney;
+    }
+
+    public void addGold(Gold gold)
+    {
+        this.currentMoney += gold;
+
+        Debug.Log("Adding Gold " + currentMoney);
+    }
+
+    public void suntractGold(Gold gold)
+    {
+        this.currentMoney -= gold;
     }
 
     public MaidAI addHouseKeeper(Vector3 position)

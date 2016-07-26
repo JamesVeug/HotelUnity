@@ -45,6 +45,9 @@ public class GuestAI : AIBase
 
         // Random properties
         property_sleep = UnityEngine.Random.Range(0, 0.5f);
+
+        // How much money the AI has
+        gold = Gold.create(100);
     }
 
     // Update is called once per frame

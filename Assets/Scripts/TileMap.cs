@@ -41,6 +41,7 @@ public class TileMap : MonoBehaviour
         typeof(ISingleBed), // InUse
         typeof(ISingleBed), // Dirty
         typeof(IDoubleBed), // Clean
+        typeof(IDoubleBed), // InUse
         typeof(IDoubleBed), // Dirty
     };
 

@@ -69,6 +69,8 @@ public abstract class BBedroom : BuildableRoom{
         return false;
     }
 
+    public abstract Gold purphaseCost();
+
     public abstract int checkin(AIBase ai);
     public abstract void checkout(AIBase ai);
 }

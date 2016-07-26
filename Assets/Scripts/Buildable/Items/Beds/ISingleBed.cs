@@ -3,7 +3,9 @@ using System.Collections;
 using System;
 using System.Collections.Generic;
 
-public class ISingleBed : BuildableBed{
+public class ISingleBed : BuildableBed
+{
+    private Gold cost = Gold.create(50);
 
     public override DRectangle Create(int x, int y)
     {
@@ -51,5 +53,10 @@ public class ISingleBed : BuildableBed{
         ISingleBed bed = (ISingleBed)ScriptableObject.CreateInstance<ISingleBed>().Create((int)vector2.x, (int)vector2.y);
         bed.rotation = Quaternion.Euler(0, rotation, 0);
         return bed;
+    }
+
+    public override Gold purphaseCost()
+    {
+        return cost;
     }
 }

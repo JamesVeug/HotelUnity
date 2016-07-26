@@ -2,7 +2,11 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class BSharedBedroom : BBedroom{
+public class BSharedBedroom : BBedroom
+{
+
+    // Cost of room
+    private Gold purphaseCode = Gold.create(0); // We don't pay for the room
 
 
     public List<Type> placeableItems = new List<Type>
@@ -26,8 +30,16 @@ public class BSharedBedroom : BBedroom{
     {
         for(int i = 0; i < beds.Count; i++)
         {
-            if(!beds[i].isDirty && !bedOwners.ContainsKey(i))
+            // Is the room clean?
+            // Is it already owned?
+            // Can we afford it?
+            if(!beds[i].isDirty && !bedOwners.ContainsKey(i) && ai.gold >= beds[i].purphaseCost())
             {
+                // Take their money
+                ai.gold -= beds[i].purphaseCost();
+                data.gameLogic.addGold(beds[i].purphaseCost());
+
+                // Assign them to a single bed
                 bedOwners.Add(i,ai);
                 return i;
             }
@@ -63,5 +75,10 @@ public class BSharedBedroom : BBedroom{
         room.doors.AddRange(doorPositions);
 
         return room;
+    }
+
+    public override Gold purphaseCost()
+    {
+        return purphaseCode;
     }
 }

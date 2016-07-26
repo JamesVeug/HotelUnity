@@ -11,6 +11,11 @@ public class TalkToGuest : Order {
         if( staff.post == null)
         {
             BReceptionRoom room = nav.getNearestEmptyFrontDeskRoom(ai);
+            if( room == null)
+            {
+                return RETURN_TYPE.FAILED;
+            }
+
             BuildableReception frontDesk = room.assignReceptionist(staff);
             staff.post = frontDesk;
         }
