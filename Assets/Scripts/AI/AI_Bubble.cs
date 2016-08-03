@@ -10,12 +10,10 @@ public class AI_Bubble : MonoBehaviour {
     private float MoveSpeed = 1f;
 
     public Vector3 initialWorldPosition;
-    private Vector3 initialSize;
 
     // Use this for initialization
     void Start () {
         transform.rotation = Quaternion.identity;
-        initialSize = gameObject.transform.localScale;
     }
 	
 	// Update is called once per frame

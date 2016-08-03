@@ -14,6 +14,7 @@ public class BuildableSelector : Buildable
     private GameData data;
     public BuildableRoom selectedRoom;
     public BuildableItem selectedItem;
+    public AIBase selectedAI;
 
     public void OnEnable()
     {
@@ -96,6 +97,35 @@ public class BuildableSelector : Buildable
 
     public override void releaseMouse(Vector3 pressedPosition, Vector3 releasePosition, MouseButton mouseButton)
     {
+
+        if( selectedAI == null && selectedRoom == null && selectedItem == null)
+        {
+            AIBase ai = GetAIAtPosition(releasePosition);
+            if( ai != null)
+            {
+                selectedAI = ai;
+                return;
+            }
+        }
+        else if( selectedAI != null )
+        {
+            // Did we click away from the ai?
+            AIBase ai = GetAIAtPosition(releasePosition);
+            if (ai != selectedAI)
+            {
+                // Deselect
+                selectedAI = ai;
+            }
+            return;
+        }
+
+        // Look for room
+        if (selectedRoom == null) { 
+            BuildableRoom room = data.dTileMap.getRoom((int)pressedPosition.x, (int)pressedPosition.z);
+            selectedRoom = room;
+            Debug.Log("Room -> " + room);
+        }
+
         // Have we selected a item
         if (selectedItem != null)
         {
@@ -131,18 +161,35 @@ public class BuildableSelector : Buildable
                     return;
                 }
             }
-
-            // Run press mouse inside the room
-            // Else
-            // Deselect room
-
+            else
+            {
+                // Deselect room
+                selectedRoom = null;
+            }
         }
 
 
-        // Look for room
-        BuildableRoom room = data.dTileMap.getRoom((int)pressedPosition.x, (int)pressedPosition.z);
-        selectedRoom = room;
-        Debug.Log("Room -> " + room);
+    }
+
+    private AIBase GetAIAtPosition(Vector3 position)
+    {
+        LayerMask layerMask = 1 << LayerMask.NameToLayer("AI");
+        Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+        RaycastHit hit;
+
+        if (Physics.Raycast(ray, out hit, 100, layerMask))
+        {
+            Transform parent = hit.transform.root;
+            AIBase ai = parent.GetComponent<AIBase>();
+            if( ai != null)
+            {
+                return ai;
+            }
+            Debug.Log("Raycast Hit : " + parent.name);
+        }
+
+
+        return null;
     }
 
     public override void switchValue()

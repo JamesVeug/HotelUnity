@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 using UnityEngine.UI;
+using System;
 
 public class SelectionTileUI : MonoBehaviour {
     public SelectionTile selectionScript;
@@ -18,6 +19,7 @@ public class SelectionTileUI : MonoBehaviour {
     public Image currentMouseImage;
     public Sprite rotateImage;
     public Sprite IconImage;
+    public Camera guestCamera;
 
     private GameData data;
     private Gold visibleGold;
@@ -39,28 +41,7 @@ public class SelectionTileUI : MonoBehaviour {
         Buildable buildable = selectionScript.getBuildable();
         soldBedText.text  = "" + data.gameLogic.soldBeds;
         rejectedText.text = "" + data.gameLogic.rejectedPeople;
-        if(!goldText.text.Equals(data.gameLogic.getGold())){
-            Gold gameGold = data.gameLogic.getGold();
-            if (visibleGold < gameGold )
-            {
-                // Gained Money
-                GameObject o = Instantiate(addChangeGoldTextPrefab);
-                o.transform.position = goldText.transform.position;
-                o.transform.SetParent(FindObjectOfType<Canvas>().transform);
-                o.GetComponent<Text>().text = "+" + (gameGold - visibleGold).amount;
-            }
-            if (visibleGold > gameGold)
-            {
-                // Lost Money
-                GameObject o = Instantiate(subChangeGoldTextPrefab);
-                o.transform.position = goldText.transform.position;
-                o.transform.SetParent(FindObjectOfType<Canvas>().transform);
-                o.GetComponent<Text>().text = "-" + (gameGold - visibleGold).amount;
-            }
-            visibleGold.amount = gameGold.amount;
-            goldText.text = "" + visibleGold;
-        }
-        
+        updateGoldText();        
         roomText.text =     "" + buildable.GetType().Name;
         stageText.text =    "" + buildable.getStage();
         propertyText.text = "" + buildable.getProperty();
@@ -76,18 +57,41 @@ public class SelectionTileUI : MonoBehaviour {
         }
         else if (buildable is BuildableSelector)
         {
+            BuildableSelector selector = ((BuildableSelector)buildable);
+
             string message = "Nothing Selected";
-            BuildableRoom room = ((BuildableSelector)buildable).selectedRoom;
+            BuildableRoom room = selector.selectedRoom;
             if (room != null)
             {
                 message = room.GetType().Name;
-                BuildableItem item = ((BuildableSelector)buildable).selectedItem;
+                BuildableItem item = selector.selectedItem;
                 if (item != null)
                 {
                     message += "->" + item.GetType().Name;
                 }
             }
             itemText.text = message;
+
+            // Guest Info
+            GuestAI[] ais = FindObjectsOfType<GuestAI>();
+            guestInfo.text = "Guests: " + ais.Length;
+            if (selector.selectedAI != null)
+            {
+                guestInfo.text += "\n\nSelectedAI: " + selector.selectedAI.GetType().ToString();
+                guestInfo.text += "\nName: " + selector.selectedAI.getAIName();
+                guestInfo.text += "\nGold: " + selector.selectedAI.gold;
+
+                if(selector.selectedAI.getOwnedBed() != null ){
+                    guestInfo.text += "\nBed: " + selector.selectedAI.getOwnedBed().GetType().ToString();
+                }
+                guestCamera.enabled = true;
+                guestCamera.GetComponent<TrackGuest>().track(selector.selectedAI.transform);
+            }
+            else
+            {
+                guestCamera.enabled = false;
+                guestCamera.GetComponent<TrackGuest>().stopTracking();
+            }
             
         }
 
@@ -103,17 +107,7 @@ public class SelectionTileUI : MonoBehaviour {
         }
 
         mapText.text = text;
-
-        // Guest Info
-        GuestAI[] ais = FindObjectsOfType<GuestAI>();
-        guestInfo.text = "Guests: " + ais.Length;
-
-        foreach(GuestAI ai in ais)
-        {
-            Order o = ai.getCurrentOrder();
-            string orderText = o != null ? o.ToString() : "Idle";
-            guestInfo.text += "\n" + orderText + " " + ai.State;
-        }
+        
 
 
         // Cursor stuff
@@ -145,5 +139,31 @@ public class SelectionTileUI : MonoBehaviour {
             currentMouseImage.enabled = false;
         }
 
+    }
+
+    private void updateGoldText()
+    {
+        if (!goldText.text.Equals(data.gameLogic.getGold()))
+        {
+            Gold gameGold = data.gameLogic.getGold();
+            if (visibleGold < gameGold)
+            {
+                // Gained Money
+                GameObject o = Instantiate(addChangeGoldTextPrefab);
+                o.transform.position = goldText.transform.position;
+                o.transform.SetParent(FindObjectOfType<Canvas>().transform);
+                o.GetComponent<Text>().text = "+" + (gameGold - visibleGold).amount;
+            }
+            if (visibleGold > gameGold)
+            {
+                // Lost Money
+                GameObject o = Instantiate(subChangeGoldTextPrefab);
+                o.transform.position = goldText.transform.position;
+                o.transform.SetParent(FindObjectOfType<Canvas>().transform);
+                o.GetComponent<Text>().text = "-" + (gameGold - visibleGold).amount;
+            }
+            visibleGold.amount = gameGold.amount;
+            goldText.text = "" + visibleGold;
+        }
     }
 }

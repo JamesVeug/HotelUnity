@@ -68,7 +68,7 @@ public class GameLogic : MonoBehaviour {
     {
         this.currentMoney += gold;
 
-        Debug.Log("Adding Gold " + currentMoney);
+        //Debug.Log("Adding Gold " + currentMoney);
     }
 
     public void suntractGold(Gold gold)

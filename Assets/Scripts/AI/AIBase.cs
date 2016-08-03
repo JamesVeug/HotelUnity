@@ -29,6 +29,7 @@ public abstract class AIBase : MonoBehaviour
 
     protected int bedIndex = 0;
     protected int bedSideIndex = 0;
+    protected string aiName;
 
     protected BBedroom ownedRoom = null;
     protected BuildableRoom currentRoom = null;
@@ -41,6 +42,10 @@ public abstract class AIBase : MonoBehaviour
     // Money that the People have in their pockets
     public Gold gold = null;
 
+    public void OnEnable()
+    {
+        aiName = "John Doe";
+    }
 
     public void walkToItem(Vector3 pos)
     {
@@ -260,5 +265,10 @@ public abstract class AIBase : MonoBehaviour
     {
         // While walking to the target, we need to check that the next tile doesn't contain a door
         return nav.blockedByDoor(current, next);
+    }
+    
+    public string getAIName()
+    {
+        return aiName;
     }
 }
